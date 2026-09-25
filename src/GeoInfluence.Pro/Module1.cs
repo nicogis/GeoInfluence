@@ -1,3 +1,4 @@
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 
 namespace GeoInfluence.Pro;
