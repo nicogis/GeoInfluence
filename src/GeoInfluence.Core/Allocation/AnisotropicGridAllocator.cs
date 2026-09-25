@@ -70,6 +70,7 @@ public sealed class AnisotropicGridAllocator
 
                 var winnerIndex = 0;
                 var winnerScore = WeightedScore(sites[0], centerX, centerY);
+                var runnerUpScore = double.PositiveInfinity;
 
                 for (var siteIndex = 1; siteIndex < sites.Count; siteIndex++)
                 {
@@ -77,10 +78,25 @@ public sealed class AnisotropicGridAllocator
 
                     if (score < winnerScore)
                     {
+                        runnerUpScore = winnerScore;
                         winnerIndex = siteIndex;
                         winnerScore = score;
                     }
+                    else if (score < runnerUpScore)
+                    {
+                        runnerUpScore = score;
+                    }
                 }
+
+                var scoreMargin = double.IsPositiveInfinity(runnerUpScore)
+                    ? double.PositiveInfinity
+                    : runnerUpScore - winnerScore;
+
+                var confidence = double.IsPositiveInfinity(runnerUpScore)
+                    ? 1.0
+                    : runnerUpScore <= 0
+                        ? 0.0
+                        : Math.Clamp(scoreMargin / runnerUpScore, 0.0, 1.0);
 
                 cells.Add(new AllocationCell(
                     Column: column,
@@ -89,7 +105,10 @@ public sealed class AnisotropicGridAllocator
                     CenterY: centerY,
                     SiteIndex: winnerIndex,
                     SiteId: sites[winnerIndex].Id,
-                    Score: winnerScore));
+                    Score: winnerScore,
+                    RunnerUpScore: runnerUpScore,
+                    ScoreMargin: scoreMargin,
+                    Confidence: confidence));
             }
         }
 
