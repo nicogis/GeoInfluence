@@ -565,9 +565,16 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                     "Feature To Raster failed. Check the geoprocessing messages for details.");
             }
 
-            Status =
-                $"Created raster '{Path.GetFileName(preparation.OutputRasterPath)}' " +
-                $"with cell size {preparation.CellSize:F3} map unit(s).";
+            var rasterName = Path.GetFileName(preparation.OutputRasterPath);
+
+            var symbologyApplied = await QueuedTask.Run(() =>
+                RasterSymbologyManager.ApplySiteIdColorizer(
+                    grid,
+                    rasterName));
+
+            Status = symbologyApplied
+                ? $"Created raster '{rasterName}' with cell size {preparation.CellSize:F3} map unit(s) and SiteId symbology."
+                : $"Created raster '{rasterName}' with cell size {preparation.CellSize:F3} map unit(s). The raster was created, but its SiteId symbology could not be applied automatically.";
         }
         catch (Exception ex)
         {
