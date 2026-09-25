@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/GeoInfluence.Core/GeoInfluence.Core.csproj" />
+    <Project Path="src/GeoInfluence.Pro/GeoInfluence.Pro.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/GeoInfluence.Core.Tests/GeoInfluence.Core.Tests.csproj" />
