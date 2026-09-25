@@ -15,18 +15,16 @@ public sealed class AnisotropicDistanceMetric : IDistanceMetric
     {
         ArgumentNullException.ThrowIfNull(site);
 
+        var deltaX = x - site.X;
+        var deltaY = y - site.Y;
+
         var anisotropy = site.Anisotropy;
         if (anisotropy is null)
         {
-            var dx = x - site.X;
-            var dy = y - site.Y;
-            return Math.Sqrt((dx * dx) + (dy * dy));
+            return Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
         }
 
         anisotropy.Validate();
-
-        var dx = x - site.X;
-        var dy = y - site.Y;
 
         // Convert GIS bearing (clockwise from north) to a standard
         // mathematical angle (counter-clockwise from +X).
@@ -35,8 +33,8 @@ public sealed class AnisotropicDistanceMetric : IDistanceMetric
         var sin = Math.Sin(angleRadians);
 
         // Rotate the candidate vector into the site's local major/minor axes.
-        var major = (dx * cos) + (dy * sin);
-        var minor = (-dx * sin) + (dy * cos);
+        var major = (deltaX * cos) + (deltaY * sin);
+        var minor = (-deltaX * sin) + (deltaY * cos);
 
         var normalizedMajor = major / anisotropy.MajorScale;
         var normalizedMinor = minor / anisotropy.MinorScale;
