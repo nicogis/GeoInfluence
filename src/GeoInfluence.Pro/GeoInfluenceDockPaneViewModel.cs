@@ -6,7 +6,9 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using GeoInfluence.Core.Models;
 using GeoInfluence.Pro.Models;
+using GeoInfluence.Pro.Services;
 
 namespace GeoInfluence.Pro;
 
@@ -17,6 +19,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private readonly ObservableCollection<LayerOption> _pointLayers = [];
     private readonly ObservableCollection<FieldOption> _allFields = [];
     private readonly ObservableCollection<FieldOption> _numericFields = [];
+    private readonly ObservableCollection<InfluenceSite> _loadedSites = [];
 
     private LayerOption? _selectedLayer;
     private FieldOption? _selectedIdField;
@@ -26,12 +29,16 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private FieldOption? _selectedMinorScaleField;
     private string _heading = "Spatial Influence Modeling";
     private string _status = "Select or refresh a point layer from the active map.";
+    private string _loadScope = "No sites loaded.";
     private bool _isBusy;
 
     protected GeoInfluenceDockPaneViewModel()
     {
         RefreshLayersCommand = new RelayCommand(
             () => _ = RefreshLayersAsync());
+
+        LoadSitesCommand = new RelayCommand(
+            () => _ = LoadSitesAsync());
     }
 
     public string Heading
@@ -46,6 +53,12 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         private set => SetProperty(ref _status, value);
     }
 
+    public string LoadScope
+    {
+        get => _loadScope;
+        private set => SetProperty(ref _loadScope, value);
+    }
+
     public override bool IsBusy => _isBusy;
 
     public ObservableCollection<LayerOption> PointLayers => _pointLayers;
@@ -53,6 +66,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     public ObservableCollection<FieldOption> AllFields => _allFields;
 
     public ObservableCollection<FieldOption> NumericFields => _numericFields;
+
+    public ObservableCollection<InfluenceSite> LoadedSites => _loadedSites;
 
     public LayerOption? SelectedLayer
     {
@@ -95,6 +110,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     }
 
     public ICommand RefreshLayersCommand { get; }
+
+    public ICommand LoadSitesCommand { get; }
 
     protected override async Task InitializeAsync()
     {
@@ -160,6 +177,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private async Task LoadFieldsAsync(LayerOption? layerOption)
     {
         ClearFieldSelections();
+        ClearLoadedSites();
 
         if (layerOption is null)
         {
@@ -189,7 +207,9 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 NumericFields.Add(field);
 
             SelectedIdField =
-                AllFields.FirstOrDefault(field => field.FieldType == FieldType.OID)
+                AllFields.FirstOrDefault(field =>
+                    string.Equals(field.Name, "ID", StringComparison.OrdinalIgnoreCase))
+                ?? AllFields.FirstOrDefault(field => field.FieldType == FieldType.OID)
                 ?? AllFields.FirstOrDefault();
 
             SelectedWeightField = FindFieldByName("Weight");
@@ -202,6 +222,58 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         catch (Exception ex)
         {
             Status = $"Unable to read fields from '{layerOption.Name}': {ex.Message}";
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private async Task LoadSitesAsync()
+    {
+        if (IsBusy)
+            return;
+
+        if (SelectedLayer is null ||
+            SelectedIdField is null ||
+            SelectedWeightField is null ||
+            SelectedBearingField is null ||
+            SelectedMajorScaleField is null ||
+            SelectedMinorScaleField is null)
+        {
+            Status = "Select a point layer and map all required fields before loading sites.";
+            return;
+        }
+
+        SetBusy(true);
+
+        try
+        {
+            var result = await QueuedTask.Run(() =>
+                InfluenceSiteReader.Read(
+                    SelectedLayer.Layer,
+                    SelectedIdField,
+                    SelectedWeightField,
+                    SelectedBearingField,
+                    SelectedMajorScaleField,
+                    SelectedMinorScaleField));
+
+            LoadedSites.Clear();
+            foreach (var site in result.Sites)
+                LoadedSites.Add(site);
+
+            LoadScope = result.UsedSelection
+                ? $"{LoadedSites.Count} selected site(s) loaded."
+                : $"{LoadedSites.Count} site(s) loaded from the full layer.";
+
+            Status = LoadedSites.Count == 0
+                ? "No point features were available to load."
+                : "Influence sites validated and loaded into GeoInfluence.Core.";
+        }
+        catch (Exception ex)
+        {
+            ClearLoadedSites();
+            Status = $"Unable to load influence sites: {ex.Message}";
         }
         finally
         {
@@ -228,6 +300,12 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         SelectedBearingField = null;
         SelectedMajorScaleField = null;
         SelectedMinorScaleField = null;
+    }
+
+    private void ClearLoadedSites()
+    {
+        LoadedSites.Clear();
+        LoadScope = "No sites loaded.";
     }
 
     private FieldOption? FindFieldByName(string name)

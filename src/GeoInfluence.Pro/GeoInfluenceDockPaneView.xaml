@@ -4,8 +4,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="620"
-             d:DesignWidth="380">
+             d:DesignHeight="720"
+             d:DesignWidth="420">
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -57,13 +57,13 @@
                         <TextBlock Grid.Row="1"
                                    Grid.ColumnSpan="3"
                                    Margin="0,8,0,0"
-                                   Text="Only point feature layers from the active map are listed."
+                                   Text="If the layer has a selection, only selected points are loaded; otherwise the full layer is used."
                                    TextWrapping="Wrap"
                                    Opacity="0.75" />
                     </Grid>
                 </GroupBox>
 
-                <GroupBox Header="Field mapping">
+                <GroupBox Header="Field mapping" Margin="0,0,0,10">
                     <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -130,6 +130,34 @@
                                   DisplayMemberPath="DisplayName" />
                     </Grid>
                 </GroupBox>
+
+                <Button Content="Load influence sites"
+                        Command="{Binding LoadSitesCommand}"
+                        Padding="12,5"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,8" />
+
+                <TextBlock Text="{Binding LoadScope}"
+                           Margin="0,0,0,8"
+                           FontWeight="SemiBold" />
+
+                <DataGrid ItemsSource="{Binding LoadedSites}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          HeadersVisibility="Column"
+                          MinHeight="180"
+                          MaxHeight="280">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto" />
+                        <DataGridTextColumn Header="X" Binding="{Binding X, StringFormat=F3}" Width="*" />
+                        <DataGridTextColumn Header="Y" Binding="{Binding Y, StringFormat=F3}" Width="*" />
+                        <DataGridTextColumn Header="Weight" Binding="{Binding Weight, StringFormat=F3}" Width="Auto" />
+                        <DataGridTextColumn Header="Bearing" Binding="{Binding Anisotropy.BearingDegrees, StringFormat=F1}" Width="Auto" />
+                        <DataGridTextColumn Header="Major" Binding="{Binding Anisotropy.MajorScale, StringFormat=F2}" Width="Auto" />
+                        <DataGridTextColumn Header="Minor" Binding="{Binding Anisotropy.MinorScale, StringFormat=F2}" Width="Auto" />
+                    </DataGrid.Columns>
+                </DataGrid>
             </StackPanel>
         </ScrollViewer>
 
