@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArcGIS defaultAssembly="GeoInfluence.Pro.dll"
+        defaultNamespace="GeoInfluence.Pro"
+        xmlns="http://schemas.esri.com/DADF/Registry"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <AddInInfo id="{54E83604-64A1-4C12-A10B-5A54ACAA4A17}" version="0.1.0" desktopVersion="3.7">
+    <Name>GeoInfluence</Name>
+    <Description>Advanced spatial influence modeling for ArcGIS Pro.</Description>
+    <Author>NicoGIS</Author>
+    <Company>NicoGIS</Company>
+    <Date>2026-09-25</Date>
+    <Subject>Spatial Analysis</Subject>
+  </AddInInfo>
+
+  <modules>
+    <insertModule id="GeoInfluence_Pro_Module"
+                  className="Module1"
+                  autoLoad="false"
+                  caption="GeoInfluence">
+      <tabs>
+        <tab id="GeoInfluence_Pro_Tab" caption="GeoInfluence">
+          <group refID="GeoInfluence_Pro_Group" />
+        </tab>
+      </tabs>
+
+      <groups>
+        <group id="GeoInfluence_Pro_Group"
+               caption="Spatial Influence"
+               appearsOnAddInTab="false">
+          <button refID="GeoInfluence_Pro_ShowDockPaneButton" size="large" />
+        </group>
+      </groups>
+
+      <controls>
+        <button id="GeoInfluence_Pro_ShowDockPaneButton"
+                caption="GeoInfluence"
+                className="ShowGeoInfluenceDockPaneButton"
+                loadOnClick="true">
+          <tooltip heading="GeoInfluence">
+            Open the GeoInfluence spatial influence modeling pane.
+            <disabledText />
+          </tooltip>
+        </button>
+      </controls>
+
+      <dockPanes>
+        <dockPane id="GeoInfluence_Pro_DockPane"
+                  caption="GeoInfluence"
+                  className="GeoInfluenceDockPaneViewModel"
+                  initiallyVisible="false"
+                  dock="group"
+                  dockWith="esri_core_contentsDockPane">
+          <content className="GeoInfluenceDockPaneView" />
+        </dockPane>
+      </dockPanes>
+    </insertModule>
+  </modules>
+</ArcGIS>
