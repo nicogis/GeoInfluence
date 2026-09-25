@@ -131,15 +131,30 @@
                     </Grid>
                 </GroupBox>
 
-                <Button Content="Load influence sites"
-                        Command="{Binding LoadSitesCommand}"
-                        Padding="12,5"
-                        HorizontalAlignment="Left"
-                        Margin="0,0,0,8" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="Load influence sites"
+                            Command="{Binding LoadSitesCommand}"
+                            Padding="12,5"
+                            Margin="0,0,8,0" />
+
+                    <Button Content="Calculate preview"
+                            Command="{Binding CalculatePreviewCommand}"
+                            Padding="12,5"
+                            Margin="0,0,8,0" />
+
+                    <Button Content="Clear preview"
+                            Command="{Binding ClearPreviewCommand}"
+                            Padding="12,5" />
+                </StackPanel>
 
                 <TextBlock Text="{Binding LoadScope}"
                            Margin="0,0,0,8"
                            FontWeight="SemiBold" />
+
+                <TextBlock Text="Preview uses a 40 x 40 weighted anisotropic allocation grid over the loaded site extent."
+                           Margin="0,0,0,8"
+                           TextWrapping="Wrap"
+                           Opacity="0.75" />
 
                 <DataGrid ItemsSource="{Binding LoadedSites}"
                           AutoGenerateColumns="False"
