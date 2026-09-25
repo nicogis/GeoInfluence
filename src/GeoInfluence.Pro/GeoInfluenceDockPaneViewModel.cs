@@ -46,11 +46,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         private set => SetProperty(ref _status, value);
     }
 
-    public bool IsBusy
-    {
-        get => _isBusy;
-        private set => SetProperty(ref _isBusy, value);
-    }
+    public override bool IsBusy => _isBusy;
 
     public ObservableCollection<LayerOption> PointLayers => _pointLayers;
 
@@ -116,7 +112,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         if (IsBusy)
             return;
 
-        IsBusy = true;
+        SetBusy(true);
 
         try
         {
@@ -157,7 +153,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         }
         finally
         {
-            IsBusy = false;
+            SetBusy(false);
         }
     }
 
@@ -171,7 +167,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             return;
         }
 
-        IsBusy = true;
+        SetBusy(true);
 
         try
         {
@@ -209,8 +205,17 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         }
         finally
         {
-            IsBusy = false;
+            SetBusy(false);
         }
+    }
+
+    private void SetBusy(bool value)
+    {
+        if (_isBusy == value)
+            return;
+
+        _isBusy = value;
+        NotifyPropertyChanged(nameof(IsBusy));
     }
 
     private void ClearFieldSelections()
