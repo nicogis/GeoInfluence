@@ -183,6 +183,11 @@
 
                     <Button Content="Export regions"
                             Command="{Binding ExportRegionsCommand}"
+                            Padding="12,5"
+                            Margin="0,0,8,0" />
+
+                    <Button Content="Export raster"
+                            Command="{Binding ExportRasterCommand}"
                             Padding="12,5" />
                 </StackPanel>
 
@@ -190,7 +195,7 @@
                            Margin="0,0,0,8"
                            FontWeight="SemiBold" />
 
-                <TextBlock Text="Preview output is temporary. Export polygons writes the grid cells; Export regions dissolves cells by SiteId into contiguous/multipart influence areas with summary score statistics."
+                <TextBlock Text="Preview output is temporary. Export polygons writes grid cells; Export regions dissolves cells by SiteId; Export raster creates an integer allocation raster in the project default geodatabase."
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
                            Opacity="0.75" />
