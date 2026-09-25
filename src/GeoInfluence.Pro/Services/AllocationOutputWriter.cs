@@ -10,6 +10,19 @@ namespace GeoInfluence.Pro.Services;
 
 internal static class AllocationOutputWriter
 {
+    private static readonly (int R, int G, int B)[] Palette =
+    [
+        (31, 119, 180),
+        (255, 127, 14),
+        (44, 160, 44),
+        (214, 39, 40),
+        (148, 103, 189),
+        (140, 86, 75),
+        (227, 119, 194),
+        (127, 127, 127),
+        (188, 189, 34),
+        (23, 190, 207)
+    ];
     internal sealed record OutputResult(
         string FeatureClassName,
         string GeodatabasePath,
@@ -103,16 +116,78 @@ internal static class AllocationOutputWriter
             }
         });
 
-        LayerFactory.Instance.CreateLayer<FeatureLayer>(
+        var outputLayer = LayerFactory.Instance.CreateLayer<FeatureLayer>(
             new FeatureLayerCreationParams(featureClass)
             {
                 Name = featureClassName
             },
             map);
 
+        outputLayer.SetRenderer(
+            CreateSiteIdRenderer(grid));
+
         return new OutputResult(
             featureClassName,
             geodatabasePath,
             grid.Cells.Count);
+    }
+
+    private static CIMRenderer CreateSiteIdRenderer(AllocationGrid grid)
+    {
+        var classes = grid.Cells
+            .GroupBy(cell => new { cell.SiteIndex, cell.SiteId })
+            .OrderBy(group => group.Key.SiteIndex)
+            .Select(group =>
+            {
+                var color = Palette[group.Key.SiteIndex % Palette.Length];
+
+                var fill = ColorFactory.Instance.CreateRGBColor(
+                    color.R,
+                    color.G,
+                    color.B,
+                    75);
+
+                var outline = SymbolFactory.Instance.ConstructStroke(
+                    ColorFactory.Instance.CreateRGBColor(255, 255, 255, 90),
+                    0.5,
+                    SimpleLineStyle.Solid);
+
+                var symbol = SymbolFactory.Instance
+                    .ConstructPolygonSymbol(
+                        fill,
+                        SimpleFillStyle.Solid,
+                        outline)
+                    .MakeSymbolReference();
+
+                return new CIMUniqueValueClass
+                {
+                    Values =
+                    [
+                        new CIMUniqueValue
+                        {
+                            FieldValues = [group.Key.SiteId]
+                        }
+                    ],
+                    Label = group.Key.SiteId,
+                    Visible = true,
+                    Editable = true,
+                    Symbol = symbol
+                };
+            })
+            .ToArray();
+
+        return new CIMUniqueValueRenderer
+        {
+            Fields = ["SiteId"],
+            Groups =
+            [
+                new CIMUniqueValueGroup
+                {
+                    Heading = "Influence site",
+                    Classes = classes
+                }
+            ],
+            UseDefaultSymbol = false
+        };
     }
 }
