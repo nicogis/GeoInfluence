@@ -145,16 +145,13 @@ internal static class InfluenceRegionOutputWriter
         var xMax = xMin + grid.CellWidth;
         var yMax = yMin + grid.CellHeight;
 
-        var coordinates = new[]
-        {
-            new Coordinate2D(xMin, yMin),
-            new Coordinate2D(xMax, yMin),
-            new Coordinate2D(xMax, yMax),
-            new Coordinate2D(xMin, yMax)
-        };
-
-        return PolygonBuilderEx.CreatePolygon(
-            coordinates,
+        var envelope = EnvelopeBuilderEx.CreateEnvelope(
+            xMin,
+            yMin,
+            xMax,
+            yMax,
             spatialReference);
+
+        return PolygonBuilderEx.CreatePolygon(envelope);
     }
 }
