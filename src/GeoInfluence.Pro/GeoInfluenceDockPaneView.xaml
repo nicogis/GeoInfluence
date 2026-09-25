@@ -178,6 +178,11 @@
 
                     <Button Content="Export polygons"
                             Command="{Binding ExportPolygonsCommand}"
+                            Padding="12,5"
+                            Margin="0,0,8,0" />
+
+                    <Button Content="Export regions"
+                            Command="{Binding ExportRegionsCommand}"
                             Padding="12,5" />
                 </StackPanel>
 
@@ -185,7 +190,7 @@
                            Margin="0,0,0,8"
                            FontWeight="SemiBold" />
 
-                <TextBlock Text="Preview output is temporary. Export polygons writes the current allocation grid to the project default geodatabase with SiteId, Score, GridRow and GridCol attributes."
+                <TextBlock Text="Preview output is temporary. Export polygons writes the grid cells; Export regions dissolves cells by SiteId into contiguous/multipart influence areas with summary score statistics."
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
                            Opacity="0.75" />
