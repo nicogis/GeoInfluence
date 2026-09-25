@@ -5,6 +5,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
 using GeoInfluence.Core.Allocation;
+using ArcGIS.Core.CIM;
 
 namespace GeoInfluence.Pro.Services;
 
