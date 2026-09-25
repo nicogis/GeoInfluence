@@ -41,6 +41,11 @@
       <CopyLocal>False</CopyLocal>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Extensions">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="ArcGIS.Desktop.Shared.Wpf">
       <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Shared.Wpf.dll</HintPath>
       <CopyLocal>False</CopyLocal>
