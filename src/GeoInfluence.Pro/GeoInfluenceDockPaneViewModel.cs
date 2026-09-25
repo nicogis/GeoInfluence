@@ -4,6 +4,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -54,6 +55,9 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         ExportPolygonsCommand = new RelayCommand(
             () => _ = ExportPolygonsAsync());
+
+        ExportRasterCommand = new RelayCommand(
+            () => _ = ExportRasterAsync());
 
         ExportRegionsCommand = new RelayCommand(
             () => _ = ExportRegionsAsync());
@@ -156,6 +160,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     public ICommand ClearPreviewCommand { get; }
 
     public ICommand ExportPolygonsCommand { get; }
+
+    public ICommand ExportRasterCommand { get; }
 
     public ICommand ExportRegionsCommand { get; }
 
@@ -502,6 +508,94 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         }
         finally
         {
+            SetBusy(false);
+        }
+    }
+
+    private async Task ExportRasterAsync()
+    {
+        if (IsBusy)
+            return;
+
+        if (_lastAllocationGrid is null || _workingSpatialReference is null)
+        {
+            Status = "Calculate a preview before exporting the raster output.";
+            return;
+        }
+
+        SetBusy(true);
+
+        string? temporaryFeatureClassPath = null;
+
+        try
+        {
+            var grid = _lastAllocationGrid;
+            var workingSpatialReference = _workingSpatialReference;
+
+            var preparation = await QueuedTask.Run(() =>
+                RasterOutputWriter.Prepare(
+                    grid,
+                    workingSpatialReference));
+
+            temporaryFeatureClassPath = preparation.TemporaryFeatureClassPath;
+
+            var parameters = Geoprocessing.MakeValueArray(
+                preparation.TemporaryFeatureClassPath,
+                "SiteIndex",
+                preparation.OutputRasterPath,
+                preparation.CellSize);
+
+            var environments = Geoprocessing.MakeEnvironmentArray(
+                overwriteoutput: true,
+                outputCoordinateSystem: workingSpatialReference);
+
+            var result = await Geoprocessing.ExecuteToolAsync(
+                "conversion.FeatureToRaster",
+                parameters,
+                environments,
+                null,
+                null,
+                GPExecuteToolFlags.AddOutputsToMap |
+                GPExecuteToolFlags.GPThread |
+                GPExecuteToolFlags.AddToHistory);
+
+            if (result.IsFailed)
+            {
+                throw new InvalidOperationException(
+                    "Feature To Raster failed. Check the geoprocessing messages for details.");
+            }
+
+            Status =
+                $"Created raster '{Path.GetFileName(preparation.OutputRasterPath)}' " +
+                $"with cell size {preparation.CellSize:F3} map unit(s).";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Unable to export raster output: {ex.Message}";
+        }
+        finally
+        {
+            if (!string.IsNullOrWhiteSpace(temporaryFeatureClassPath))
+            {
+                try
+                {
+                    var deleteParameters =
+                        Geoprocessing.MakeValueArray(temporaryFeatureClassPath);
+
+                    await Geoprocessing.ExecuteToolAsync(
+                        "management.Delete",
+                        deleteParameters,
+                        null,
+                        null,
+                        null,
+                        GPExecuteToolFlags.GPThread);
+                }
+                catch
+                {
+                    // Best-effort cleanup. The raster result remains valid.
+                }
+            }
+
             SetBusy(false);
         }
     }
