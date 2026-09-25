@@ -546,8 +546,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 preparation.CellSize);
 
             var environments = Geoprocessing.MakeEnvironmentArray(
-                overwriteoutput: true,
-                outputCoordinateSystem: workingSpatialReference);
+                overwriteoutput: true);
 
             var result = await Geoprocessing.ExecuteToolAsync(
                 "conversion.FeatureToRaster",
