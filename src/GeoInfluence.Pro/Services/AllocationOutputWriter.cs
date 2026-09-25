@@ -53,6 +53,9 @@ internal static class AllocationOutputWriter
         {
             DdlFieldDescription.CreateStringField("SiteId", 128),
             new DdlFieldDescription("Score", FieldType.Double),
+            new DdlFieldDescription("RunnerUp", FieldType.Double),
+            new DdlFieldDescription("Margin", FieldType.Double),
+            new DdlFieldDescription("Confidence", FieldType.Double),
             DdlFieldDescription.CreateIntegerField("GridRow"),
             DdlFieldDescription.CreateIntegerField("GridCol")
         };
@@ -107,6 +110,13 @@ internal static class AllocationOutputWriter
                 rowBuffer[shapeField] = polygon;
                 rowBuffer["SiteId"] = cell.SiteId;
                 rowBuffer["Score"] = cell.Score;
+                rowBuffer["RunnerUp"] = double.IsPositiveInfinity(cell.RunnerUpScore)
+                    ? DBNull.Value
+                    : cell.RunnerUpScore;
+                rowBuffer["Margin"] = double.IsPositiveInfinity(cell.ScoreMargin)
+                    ? DBNull.Value
+                    : cell.ScoreMargin;
+                rowBuffer["Confidence"] = cell.Confidence;
                 rowBuffer["GridRow"] = cell.Row;
                 rowBuffer["GridCol"] = cell.Column;
 
