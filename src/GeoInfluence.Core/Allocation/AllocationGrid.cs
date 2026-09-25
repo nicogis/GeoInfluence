@@ -7,7 +7,10 @@ public sealed record AllocationCell(
     double CenterY,
     int SiteIndex,
     string SiteId,
-    double Score);
+    double Score,
+    double RunnerUpScore,
+    double ScoreMargin,
+    double Confidence);
 
 public sealed record AllocationGrid(
     double XMin,

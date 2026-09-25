@@ -42,7 +42,9 @@ internal static class InfluenceRegionOutputWriter
             DdlFieldDescription.CreateIntegerField("CellCount"),
             new DdlFieldDescription("MinScore", FieldType.Double),
             new DdlFieldDescription("MaxScore", FieldType.Double),
-            new DdlFieldDescription("AvgScore", FieldType.Double)
+            new DdlFieldDescription("AvgScore", FieldType.Double),
+            new DdlFieldDescription("MinConf", FieldType.Double),
+            new DdlFieldDescription("AvgConf", FieldType.Double)
         };
 
         var shapeDescription = new ShapeDescription(
@@ -114,6 +116,8 @@ internal static class InfluenceRegionOutputWriter
                 rowBuffer["MinScore"] = group.Min(cell => cell.Score);
                 rowBuffer["MaxScore"] = group.Max(cell => cell.Score);
                 rowBuffer["AvgScore"] = group.Average(cell => cell.Score);
+                rowBuffer["MinConf"] = group.Min(cell => cell.Confidence);
+                rowBuffer["AvgConf"] = group.Average(cell => cell.Confidence);
 
                 using var row = featureClass.CreateRow(rowBuffer);
             }

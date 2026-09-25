@@ -38,6 +38,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private SpatialReference? _workingSpatialReference;
     private int _previewResolution = 40;
     private double _extentMarginPercent = 20.0;
+    private bool _showConfidence;
     private AllocationGrid? _lastAllocationGrid;
 
     protected GeoInfluenceDockPaneViewModel()
@@ -102,6 +103,12 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             if (SetProperty(ref _extentMarginPercent, value))
                 _lastAllocationGrid = null;
         }
+    }
+
+    public bool ShowConfidence
+    {
+        get => _showConfidence;
+        set => SetProperty(ref _showConfidence, value);
     }
 
     public ObservableCollection<LayerOption> PointLayers => _pointLayers;
@@ -418,12 +425,17 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             _lastAllocationGrid = grid;
 
             var workingSpatialReference = _workingSpatialReference;
+            var showConfidence = ShowConfidence;
+
             await QueuedTask.Run(() =>
                 PreviewOverlayManager.Render(
                     grid,
-                    workingSpatialReference));
+                    workingSpatialReference,
+                    showConfidence));
 
-            Status = $"Preview rendered: {resolution} x {resolution} cells, {sites.Count} influence site(s).";
+            Status = ShowConfidence
+                ? $"Confidence preview rendered: {resolution} x {resolution} cells. More opaque cells have a stronger winner margin."
+                : $"Preview rendered: {resolution} x {resolution} cells, {sites.Count} influence site(s).";
         }
         catch (Exception ex)
         {

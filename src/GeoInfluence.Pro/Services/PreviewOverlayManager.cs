@@ -25,7 +25,8 @@ internal static class PreviewOverlayManager
 
     public static void Render(
         AllocationGrid grid,
-        SpatialReference workingSpatialReference)
+        SpatialReference workingSpatialReference,
+        bool showConfidence = false)
     {
         ArgumentNullException.ThrowIfNull(workingSpatialReference);
 
@@ -65,11 +66,15 @@ internal static class PreviewOverlayManager
                       ?? throw new InvalidOperationException(
                           "Unable to project an allocation cell back to the map spatial reference.");
 
+            var symbol = showConfidence
+                ? BuildConfidenceSymbol(cell)
+                : symbols[cell.SiteIndex];
+
             Graphics.Add(
                 MappingExtensions.AddOverlay(
                     mapView,
                     displayPolygon,
-                    symbols[cell.SiteIndex]));
+                    symbol));
         }
     }
 
@@ -79,6 +84,27 @@ internal static class PreviewOverlayManager
             graphic.Dispose();
 
         Graphics.Clear();
+    }
+
+    private static CIMSymbolReference BuildConfidenceSymbol(AllocationCell cell)
+    {
+        var color = Palette[cell.SiteIndex % Palette.Length];
+
+        var transparency = 15.0 + (cell.Confidence * 85.0);
+        var fill = ColorFactory.Instance.CreateRGBColor(
+            color.R,
+            color.G,
+            color.B,
+            transparency);
+
+        var outline = SymbolFactory.Instance.ConstructStroke(
+            ColorFactory.Instance.CreateRGBColor(255, 255, 255, 25),
+            0.2,
+            SimpleLineStyle.Solid);
+
+        return SymbolFactory.Instance
+            .ConstructPolygonSymbol(fill, SimpleFillStyle.Solid, outline)
+            .MakeSymbolReference();
     }
 
     private static CIMSymbolReference[] BuildSymbols(int count)
