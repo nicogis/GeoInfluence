@@ -94,17 +94,14 @@ internal static class AllocationOutputWriter
                 var xMax = xMin + grid.CellWidth;
                 var yMax = yMin + grid.CellHeight;
 
-                var coordinates = new[]
-                {
-                    new Coordinate2D(xMin, yMin),
-                    new Coordinate2D(xMax, yMin),
-                    new Coordinate2D(xMax, yMax),
-                    new Coordinate2D(xMin, yMax)
-                };
-
-                var polygon = PolygonBuilderEx.CreatePolygon(
-                    coordinates,
+                var envelope = EnvelopeBuilderEx.CreateEnvelope(
+                    xMin,
+                    yMin,
+                    xMax,
+                    yMax,
                     workingSpatialReference);
+
+                var polygon = PolygonBuilderEx.CreatePolygon(envelope);
 
                 using var rowBuffer = featureClass.CreateRowBuffer();
                 rowBuffer[shapeField] = polygon;
