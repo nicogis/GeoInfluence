@@ -49,7 +49,7 @@ internal static class PreviewOverlayManager
             };
 
             var polygon = PolygonBuilderEx.CreatePolygon(coordinates, spatialReference);
-            Graphics.Add(mapView.AddOverlay(polygon, symbols[cell.SiteIndex]));
+            Graphics.Add(MappingExtensions.AddOverlay(mapView, polygon, symbols[cell.SiteIndex]));
         }
     }
 
