@@ -6,6 +6,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using GeoInfluence.Core.Allocation;
 using GeoInfluence.Core.Models;
 using GeoInfluence.Pro.Models;
 using GeoInfluence.Pro.Services;
@@ -39,6 +40,12 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         LoadSitesCommand = new RelayCommand(
             () => _ = LoadSitesAsync());
+
+        CalculatePreviewCommand = new RelayCommand(
+            () => _ = CalculatePreviewAsync());
+
+        ClearPreviewCommand = new RelayCommand(
+            () => _ = ClearPreviewAsync());
     }
 
     public string Heading
@@ -112,6 +119,10 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     public ICommand RefreshLayersCommand { get; }
 
     public ICommand LoadSitesCommand { get; }
+
+    public ICommand CalculatePreviewCommand { get; }
+
+    public ICommand ClearPreviewCommand { get; }
 
     protected override async Task InitializeAsync()
     {
@@ -279,6 +290,85 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         {
             SetBusy(false);
         }
+    }
+
+    private async Task CalculatePreviewAsync()
+    {
+        if (IsBusy)
+            return;
+
+        if (LoadedSites.Count == 0)
+        {
+            Status = "Load at least one influence site before calculating the preview.";
+            return;
+        }
+
+        SetBusy(true);
+
+        try
+        {
+            var sites = LoadedSites.ToList();
+
+            var minX = sites.Min(site => site.X);
+            var maxX = sites.Max(site => site.X);
+            var minY = sites.Min(site => site.Y);
+            var maxY = sites.Max(site => site.Y);
+
+            var spanX = maxX - minX;
+            var spanY = maxY - minY;
+            var referenceSpan = Math.Max(spanX, spanY);
+
+            if (!double.IsFinite(referenceSpan) || referenceSpan <= 0)
+                referenceSpan = 1.0;
+
+            var margin = referenceSpan * 0.20;
+
+            if (spanX <= 0)
+            {
+                minX -= referenceSpan * 0.5;
+                maxX += referenceSpan * 0.5;
+            }
+
+            if (spanY <= 0)
+            {
+                minY -= referenceSpan * 0.5;
+                maxY += referenceSpan * 0.5;
+            }
+
+            minX -= margin;
+            minY -= margin;
+            maxX += margin;
+            maxY += margin;
+
+            const int resolution = 40;
+
+            var grid = new AnisotropicGridAllocator().Allocate(
+                sites,
+                minX,
+                minY,
+                maxX,
+                maxY,
+                columns: resolution,
+                rows: resolution);
+
+            await QueuedTask.Run(() => PreviewOverlayManager.Render(grid));
+
+            Status = $"Preview rendered: {resolution} x {resolution} cells, {sites.Count} influence site(s).";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Unable to calculate preview: {ex.Message}";
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private async Task ClearPreviewAsync()
+    {
+        await QueuedTask.Run(PreviewOverlayManager.Clear);
+        Status = "Allocation preview cleared.";
     }
 
     private void SetBusy(bool value)
