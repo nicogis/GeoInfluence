@@ -11,7 +11,18 @@ internal static class InfluenceSiteReader
 {
     internal sealed record ReadResult(
         IReadOnlyList<InfluenceSite> Sites,
-        bool UsedSelection);
+        bool UsedSelection,
+        SpatialReference WorkingSpatialReference,
+        bool AutoProjected);
+
+    private sealed record RawSite(
+        long Oid,
+        string Id,
+        double Weight,
+        double Bearing,
+        double MajorScale,
+        double MinorScale,
+        MapPoint Point);
 
     public static ReadResult Read(
         FeatureLayer layer,
@@ -28,6 +39,9 @@ internal static class InfluenceSiteReader
         ArgumentNullException.ThrowIfNull(majorScaleField);
         ArgumentNullException.ThrowIfNull(minorScaleField);
 
+        var mapSpatialReference = MapView.Active?.Map?.SpatialReference
+            ?? throw new InvalidOperationException("No active map spatial reference is available.");
+
         using var selection = layer.GetSelection();
         var useSelection = selection.GetCount() > 0;
 
@@ -35,7 +49,7 @@ internal static class InfluenceSiteReader
             ? selection.Search(null)
             : layer.GetTable().Search(null, false);
 
-        var sites = new List<InfluenceSite>();
+        var rawSites = new List<RawSite>();
 
         while (cursor.MoveNext())
         {
@@ -55,9 +69,9 @@ internal static class InfluenceSiteReader
             var majorScale = ReadDouble(row, majorScaleField.Name, oid);
             var minorScale = ReadDouble(row, minorScaleField.Name, oid);
 
-            if (!double.IsFinite(weight))
+            if (!double.IsFinite(weight) || weight <= 0)
                 throw new InvalidOperationException(
-                    $"Feature {oid}: field '{weightField.Name}' must contain a finite number.");
+                    $"Feature {oid}: field '{weightField.Name}' must contain a finite value greater than zero.");
 
             var anisotropy = new AnisotropyParameters(
                 bearing,
@@ -66,15 +80,105 @@ internal static class InfluenceSiteReader
 
             anisotropy.Validate();
 
-            sites.Add(new InfluenceSite(
+            rawSites.Add(new RawSite(
+                oid,
                 id,
-                point.X,
-                point.Y,
                 weight,
-                anisotropy));
+                bearing,
+                majorScale,
+                minorScale,
+                point));
         }
 
-        return new ReadResult(sites, useSelection);
+        if (rawSites.Count == 0)
+        {
+            return new ReadResult(
+                [],
+                useSelection,
+                mapSpatialReference,
+                false);
+        }
+
+        var workingSpatialReference = mapSpatialReference;
+        var autoProjected = false;
+
+        if (mapSpatialReference.IsGeographic)
+        {
+            workingSpatialReference = CreateLocalUtmSpatialReference(rawSites);
+            autoProjected = true;
+        }
+
+        var sites = rawSites
+            .Select(raw =>
+            {
+                var projectedPoint = ProjectPoint(raw.Point, workingSpatialReference);
+
+                return new InfluenceSite(
+                    raw.Id,
+                    projectedPoint.X,
+                    projectedPoint.Y,
+                    raw.Weight,
+                    new AnisotropyParameters(
+                        raw.Bearing,
+                        raw.MajorScale,
+                        raw.MinorScale));
+            })
+            .ToList();
+
+        return new ReadResult(
+            sites,
+            useSelection,
+            workingSpatialReference,
+            autoProjected);
+    }
+
+    private static SpatialReference CreateLocalUtmSpatialReference(
+        IReadOnlyList<RawSite> rawSites)
+    {
+        var wgs84 = SpatialReferenceBuilder.CreateSpatialReference(4326);
+
+        var wgs84Points = rawSites
+            .Select(raw => ProjectPoint(raw.Point, wgs84))
+            .ToList();
+
+        var longitude = wgs84Points.Average(point => point.X);
+        var latitude = wgs84Points.Average(point => point.Y);
+
+        if (latitude < -80 || latitude > 84)
+        {
+            throw new InvalidOperationException(
+                "Automatic metric projection is only supported between 80°S and 84°N. " +
+                "Set the map to an appropriate projected coordinate system and reload the sites.");
+        }
+
+        var zone = (int)Math.Floor((longitude + 180.0) / 6.0) + 1;
+        zone = Math.Clamp(zone, 1, 60);
+
+        var wkid = latitude >= 0
+            ? 32600 + zone
+            : 32700 + zone;
+
+        return SpatialReferenceBuilder.CreateSpatialReference(wkid);
+    }
+
+    private static MapPoint ProjectPoint(
+        MapPoint point,
+        SpatialReference targetSpatialReference)
+    {
+        if (point.SpatialReference is null)
+        {
+            throw new InvalidOperationException(
+                "A source point has no spatial reference.");
+        }
+
+        if (point.SpatialReference.Wkid == targetSpatialReference.Wkid)
+            return point;
+
+        return GeometryEngine.Instance.Project(
+                   point,
+                   targetSpatialReference) as MapPoint
+               ?? throw new InvalidOperationException(
+                   "Unable to project a source point to the working coordinate system.");
     }
 
     private static string ReadId(Row row, string fieldName, long oid)
