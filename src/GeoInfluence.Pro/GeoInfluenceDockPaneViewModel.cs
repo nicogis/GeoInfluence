@@ -31,8 +31,7 @@ internal sealed class GeoInfluenceDockPaneViewModel : DockPane
     protected GeoInfluenceDockPaneViewModel()
     {
         RefreshLayersCommand = new RelayCommand(
-            () => _ = RefreshLayersAsync(),
-            () => !IsBusy);
+            () => _ = RefreshLayersAsync());
     }
 
     public string Heading
@@ -50,11 +49,7 @@ internal sealed class GeoInfluenceDockPaneViewModel : DockPane
     public bool IsBusy
     {
         get => _isBusy;
-        private set
-        {
-            if (SetProperty(ref _isBusy, value))
-                (RefreshLayersCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        }
+        private set => SetProperty(ref _isBusy, value);
     }
 
     public ObservableCollection<LayerOption> PointLayers => _pointLayers;
