@@ -23,14 +23,18 @@ internal static class PreviewOverlayManager
         (23, 190, 207)
     ];
 
-    public static void Render(AllocationGrid grid)
+    public static void Render(
+        AllocationGrid grid,
+        SpatialReference workingSpatialReference)
     {
+        ArgumentNullException.ThrowIfNull(workingSpatialReference);
+
         Clear();
 
         var mapView = MapView.Active
             ?? throw new InvalidOperationException("No active map view is available.");
 
-        var spatialReference = mapView.Map.SpatialReference;
+        var mapSpatialReference = mapView.Map.SpatialReference;
         var symbols = BuildSymbols(grid.Cells.Max(cell => cell.SiteIndex) + 1);
 
         foreach (var cell in grid.Cells)
@@ -48,8 +52,24 @@ internal static class PreviewOverlayManager
                 new Coordinate2D(xMin, yMax)
             };
 
-            var polygon = PolygonBuilderEx.CreatePolygon(coordinates, spatialReference);
-            Graphics.Add(MappingExtensions.AddOverlay(mapView, polygon, symbols[cell.SiteIndex]));
+            var workingPolygon = PolygonBuilderEx.CreatePolygon(
+                coordinates,
+                workingSpatialReference);
+
+            var displayPolygon =
+                workingSpatialReference.Wkid == mapSpatialReference.Wkid
+                    ? workingPolygon
+                    : GeometryEngine.Instance.Project(
+                          workingPolygon,
+                          mapSpatialReference) as Polygon
+                      ?? throw new InvalidOperationException(
+                          "Unable to project an allocation cell back to the map spatial reference.");
+
+            Graphics.Add(
+                MappingExtensions.AddOverlay(
+                    mapView,
+                    displayPolygon,
+                    symbols[cell.SiteIndex]));
         }
     }
 
