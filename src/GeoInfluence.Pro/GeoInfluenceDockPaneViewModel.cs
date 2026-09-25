@@ -34,6 +34,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private string _loadScope = "No sites loaded.";
     private bool _isBusy;
     private SpatialReference? _workingSpatialReference;
+    private int _previewResolution = 40;
+    private double _extentMarginPercent = 20.0;
 
     protected GeoInfluenceDockPaneViewModel()
     {
@@ -69,6 +71,18 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     }
 
     public override bool IsBusy => _isBusy;
+
+    public int PreviewResolution
+    {
+        get => _previewResolution;
+        set => SetProperty(ref _previewResolution, value);
+    }
+
+    public double ExtentMarginPercent
+    {
+        get => _extentMarginPercent;
+        set => SetProperty(ref _extentMarginPercent, value);
+    }
 
     public ObservableCollection<LayerOption> PointLayers => _pointLayers;
 
@@ -313,6 +327,20 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             return;
         }
 
+        if (PreviewResolution < 10 || PreviewResolution > 200)
+        {
+            Status = "Preview resolution must be between 10 and 200.";
+            return;
+        }
+
+        if (!double.IsFinite(ExtentMarginPercent) ||
+            ExtentMarginPercent < 0 ||
+            ExtentMarginPercent > 200)
+        {
+            Status = "Extent margin must be between 0 and 200 percent.";
+            return;
+        }
+
         SetBusy(true);
 
         try
@@ -331,7 +359,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             if (!double.IsFinite(referenceSpan) || referenceSpan <= 0)
                 referenceSpan = 1.0;
 
-            var margin = referenceSpan * 0.20;
+            var margin = referenceSpan * (ExtentMarginPercent / 100.0);
 
             if (spanX <= 0)
             {
@@ -350,7 +378,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             maxX += margin;
             maxY += margin;
 
-            const int resolution = 40;
+            var resolution = PreviewResolution;
 
             var grid = new AnisotropicGridAllocator().Allocate(
                 sites,
