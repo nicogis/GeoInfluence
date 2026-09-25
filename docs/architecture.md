@@ -1,0 +1,42 @@
+# GeoInfluence architecture
+
+GeoInfluence is designed as a spatial influence engine with ArcGIS Pro as its first host.
+
+## Design principles
+
+1. **Core first** — mathematical models do not depend on ArcGIS Pro.
+2. **Pluggable distance metrics** — Euclidean, geodesic, anisotropic, cost-surface and network metrics can share the same influence engine.
+3. **Pluggable influence models** — weighted, gravity, constrained, probabilistic and custom models can be added independently.
+4. **Deterministic and testable** — core calculations are isolated from UI and GIS threading requirements.
+5. **ArcGIS integration at the edge** — feature/raster IO, map interaction, symbology and geoprocessing belong to the Pro project.
+
+## Planned solution
+
+```text
+GeoInfluence
+├── src
+│   ├── GeoInfluence.Core
+│   └── GeoInfluence.Pro
+├── tests
+│   └── GeoInfluence.Core.Tests
+└── docs
+```
+
+## MVP 0.1 — Anisotropic Influence
+
+The first milestone will:
+
+- read point sites from an ArcGIS Pro layer;
+- map fields to weight, bearing, major scale and minor scale;
+- compute an anisotropic influence allocation;
+- generate an output raster;
+- optionally polygonize the winning-site allocation;
+- provide an interactive preview in an ArcGIS Pro dockpane.
+
+The initial mathematical primitive is an elliptical anisotropic distance:
+
+```text
+D = sqrt((u / majorScale)^2 + (v / minorScale)^2)
+```
+
+where `u` and `v` are the candidate vector components in the site's local major/minor coordinate system.

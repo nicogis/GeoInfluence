@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>GeoInfluence.Core</RootNamespace>
+    <AssemblyName>GeoInfluence.Core</AssemblyName>
+  </PropertyGroup>
+</Project>
