@@ -28,7 +28,7 @@ internal static class AllocationOutputWriter
         if (string.IsNullOrWhiteSpace(geodatabasePath))
             throw new InvalidOperationException("The project has no default geodatabase.");
 
-        var featureClassName = $"GeoInfluence_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
+        var featureClassName = $"GeoInfluence_{DateTime.UtcNow:yyyyMMdd_HHmmssfff}";
 
         using var geodatabase = new Geodatabase(
             new FileGeodatabaseConnectionPath(
