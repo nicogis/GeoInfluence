@@ -133,7 +133,7 @@ internal static class AllocationOutputWriter
             grid.Cells.Count);
     }
 
-    private static CIMRenderer CreateSiteIdRenderer(AllocationGrid grid)
+    internal static CIMRenderer CreateSiteIdRenderer(AllocationGrid grid)
     {
         var classes = grid.Cells
             .GroupBy(cell => new { cell.SiteIndex, cell.SiteId })
