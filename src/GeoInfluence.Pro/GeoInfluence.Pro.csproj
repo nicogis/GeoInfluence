@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <NoWarn>CA1416</NoWarn>
+    <RootNamespace>GeoInfluence.Pro</RootNamespace>
+    <AssemblyName>GeoInfluence.Pro</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GeoInfluence.Core\GeoInfluence.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Config.daml" />
+    <Content Include="Config.daml" />
+    <None Include="Properties\launchSettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ArcGIS.Core">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Core.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Framework">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Mapping">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Shared.Wpf">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Shared.Wpf.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Import Project="C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets"
+          Condition="Exists('C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets') AND !Exists('Esri.ArcGISPro.Extensions.targets')" />
+</Project>
