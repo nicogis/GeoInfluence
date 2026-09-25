@@ -4,13 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="520"
-             d:DesignWidth="340">
+             d:DesignHeight="620"
+             d:DesignWidth="380">
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock Text="{Binding Heading}"
@@ -22,26 +23,122 @@
                    Text="MVP 0.1 — Anisotropic Influence"
                    Margin="0,0,0,16" />
 
-        <StackPanel Grid.Row="2">
-            <GroupBox Header="Input sites" Margin="0,0,0,10">
-                <Grid Margin="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Point layer" VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <ComboBox Grid.Column="1"
-                              IsEnabled="False"
-                              ToolTip="Point-layer selection will be implemented in the next milestone." />
-                </Grid>
-            </GroupBox>
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <GroupBox Header="Input sites" Margin="0,0,0,10">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-            <GroupBox Header="Anisotropy">
-                <StackPanel Margin="8">
-                    <TextBlock Text="Bearing, major scale and minor scale field mapping will be added next." 
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </GroupBox>
-        </StackPanel>
+                        <TextBlock Text="Point layer"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0" />
+
+                        <ComboBox Grid.Column="1"
+                                  MinWidth="170"
+                                  ItemsSource="{Binding PointLayers}"
+                                  SelectedItem="{Binding SelectedLayer, Mode=TwoWay}"
+                                  DisplayMemberPath="Name" />
+
+                        <Button Grid.Column="2"
+                                Margin="8,0,0,0"
+                                Padding="10,3"
+                                Command="{Binding RefreshLayersCommand}">
+                            Refresh
+                        </Button>
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.ColumnSpan="3"
+                                   Margin="0,8,0,0"
+                                   Text="Only point feature layers from the active map are listed."
+                                   TextWrapping="Wrap"
+                                   Opacity="0.75" />
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Header="Field mapping">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="ID"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,8" />
+                        <ComboBox Grid.Column="1"
+                                  Margin="0,0,0,8"
+                                  ItemsSource="{Binding AllFields}"
+                                  SelectedItem="{Binding SelectedIdField, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName" />
+
+                        <TextBlock Grid.Row="1"
+                                   Text="Weight"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,8" />
+                        <ComboBox Grid.Row="1"
+                                  Grid.Column="1"
+                                  Margin="0,0,0,8"
+                                  ItemsSource="{Binding NumericFields}"
+                                  SelectedItem="{Binding SelectedWeightField, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName" />
+
+                        <TextBlock Grid.Row="2"
+                                   Text="Bearing"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,8" />
+                        <ComboBox Grid.Row="2"
+                                  Grid.Column="1"
+                                  Margin="0,0,0,8"
+                                  ItemsSource="{Binding NumericFields}"
+                                  SelectedItem="{Binding SelectedBearingField, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName" />
+
+                        <TextBlock Grid.Row="3"
+                                   Text="Major scale"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,8" />
+                        <ComboBox Grid.Row="3"
+                                  Grid.Column="1"
+                                  Margin="0,0,0,8"
+                                  ItemsSource="{Binding NumericFields}"
+                                  SelectedItem="{Binding SelectedMajorScaleField, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName" />
+
+                        <TextBlock Grid.Row="4"
+                                   Text="Minor scale"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,0" />
+                        <ComboBox Grid.Row="4"
+                                  Grid.Column="1"
+                                  ItemsSource="{Binding NumericFields}"
+                                  SelectedItem="{Binding SelectedMinorScaleField, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName" />
+                    </Grid>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="3"
+                Margin="0,12,0,0"
+                Padding="8"
+                BorderThickness="1">
+            <TextBlock Text="{Binding Status}"
+                       TextWrapping="Wrap" />
+        </Border>
     </Grid>
 </UserControl>
