@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -32,6 +33,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private string _status = "Select or refresh a point layer from the active map.";
     private string _loadScope = "No sites loaded.";
     private bool _isBusy;
+    private SpatialReference? _workingSpatialReference;
 
     protected GeoInfluenceDockPaneViewModel()
     {
@@ -273,13 +275,21 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             foreach (var site in result.Sites)
                 LoadedSites.Add(site);
 
-            LoadScope = result.UsedSelection
+            _workingSpatialReference = result.WorkingSpatialReference;
+
+            var sourceText = result.UsedSelection
                 ? $"{LoadedSites.Count} selected site(s) loaded."
                 : $"{LoadedSites.Count} site(s) loaded from the full layer.";
 
+            var spatialReferenceText = result.AutoProjected
+                ? $" Working SR: EPSG:{result.WorkingSpatialReference.Wkid} (automatic UTM projection)."
+                : $" Working SR: EPSG:{result.WorkingSpatialReference.Wkid}.";
+
+            LoadScope = sourceText + spatialReferenceText;
+
             Status = LoadedSites.Count == 0
                 ? "No point features were available to load."
-                : "Influence sites validated and loaded into GeoInfluence.Core.";
+                : "Influence sites validated and loaded into GeoInfluence.Core using projected working coordinates.";
         }
         catch (Exception ex)
         {
@@ -297,7 +307,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         if (IsBusy)
             return;
 
-        if (LoadedSites.Count == 0)
+        if (LoadedSites.Count == 0 || _workingSpatialReference is null)
         {
             Status = "Load at least one influence site before calculating the preview.";
             return;
@@ -351,7 +361,11 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 columns: resolution,
                 rows: resolution);
 
-            await QueuedTask.Run(() => PreviewOverlayManager.Render(grid));
+            var workingSpatialReference = _workingSpatialReference;
+            await QueuedTask.Run(() =>
+                PreviewOverlayManager.Render(
+                    grid,
+                    workingSpatialReference));
 
             Status = $"Preview rendered: {resolution} x {resolution} cells, {sites.Count} influence site(s).";
         }
@@ -395,6 +409,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private void ClearLoadedSites()
     {
         LoadedSites.Clear();
+        _workingSpatialReference = null;
         LoadScope = "No sites loaded.";
     }
 
