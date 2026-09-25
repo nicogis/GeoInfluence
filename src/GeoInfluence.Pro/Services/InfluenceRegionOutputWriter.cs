@@ -94,6 +94,19 @@ internal static class InfluenceRegionOutputWriter
                     ?? throw new InvalidOperationException(
                         $"Unable to dissolve cells for site '{group.Key.SiteId}'.");
 
+                if (!GeometryEngine.Instance.IsSimpleAsFeature(region))
+                {
+                    region = GeometryEngine.Instance.SimplifyAsFeature(region) as Polygon
+                        ?? throw new InvalidOperationException(
+                            $"Unable to simplify dissolved region for site '{group.Key.SiteId}'.");
+                }
+
+                if (!double.IsFinite(region.Area) || Math.Abs(region.Area) <= 0)
+                {
+                    throw new InvalidOperationException(
+                        $"Dissolved region for site '{group.Key.SiteId}' has zero area.");
+                }
+
                 using var rowBuffer = featureClass.CreateRowBuffer();
                 rowBuffer[shapeField] = region;
                 rowBuffer["SiteId"] = group.Key.SiteId;
