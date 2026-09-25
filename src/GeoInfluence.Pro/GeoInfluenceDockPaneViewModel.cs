@@ -10,7 +10,7 @@ using GeoInfluence.Pro.Models;
 
 namespace GeoInfluence.Pro;
 
-internal sealed class GeoInfluenceDockPaneViewModel : DockPane
+internal class GeoInfluenceDockPaneViewModel : DockPane
 {
     internal const string DockPaneId = "GeoInfluence_Pro_DockPane";
 
