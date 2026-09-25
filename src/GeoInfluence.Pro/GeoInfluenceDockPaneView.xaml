@@ -131,6 +131,35 @@
                     </Grid>
                 </GroupBox>
 
+                <GroupBox Header="Preview settings" Margin="0,0,0,10">
+                    <Grid Margin="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="90" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Resolution"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding PreviewResolution, UpdateSourceTrigger=PropertyChanged}"
+                                 HorizontalContentAlignment="Right" />
+
+                        <TextBlock Grid.Column="3"
+                                   Text="Margin %"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+
+                        <TextBox Grid.Column="4"
+                                 Text="{Binding ExtentMarginPercent, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}"
+                                 HorizontalContentAlignment="Right" />
+                    </Grid>
+                </GroupBox>
+
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <Button Content="Load influence sites"
                             Command="{Binding LoadSitesCommand}"
@@ -151,7 +180,7 @@
                            Margin="0,0,0,8"
                            FontWeight="SemiBold" />
 
-                <TextBlock Text="Preview uses a 40 x 40 weighted anisotropic allocation grid over the loaded site extent."
+                <TextBlock Text="Preview output is temporary. Resolution controls the grid size on both axes; margin expands the loaded-site extent before allocation."
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
                            Opacity="0.75" />
