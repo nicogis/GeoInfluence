@@ -1,5 +1,6 @@
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
+using DdlFieldDescription = ArcGIS.Core.Data.DDL.FieldDescription;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Mapping;
@@ -34,12 +35,12 @@ internal static class AllocationOutputWriter
             new FileGeodatabaseConnectionPath(
                 new Uri(geodatabasePath)));
 
-        var fields = new List<FieldDescription>
+        var fields = new List<DdlFieldDescription>
         {
-            FieldDescription.CreateStringField("SiteId", 128),
-            new("Score", FieldType.Double),
-            FieldDescription.CreateIntegerField("GridRow"),
-            FieldDescription.CreateIntegerField("GridCol")
+            DdlFieldDescription.CreateStringField("SiteId", 128),
+            new DdlFieldDescription("Score", FieldType.Double),
+            DdlFieldDescription.CreateIntegerField("GridRow"),
+            DdlFieldDescription.CreateIntegerField("GridCol")
         };
 
         var shapeDescription = new ShapeDescription(
