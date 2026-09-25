@@ -54,6 +54,9 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         ExportPolygonsCommand = new RelayCommand(
             () => _ = ExportPolygonsAsync());
+
+        ExportRegionsCommand = new RelayCommand(
+            () => _ = ExportRegionsAsync());
     }
 
     public string Heading
@@ -153,6 +156,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     public ICommand ClearPreviewCommand { get; }
 
     public ICommand ExportPolygonsCommand { get; }
+
+    public ICommand ExportRegionsCommand { get; }
 
     protected override async Task InitializeAsync()
     {
@@ -458,6 +463,42 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         catch (Exception ex)
         {
             Status = $"Unable to export polygon output: {ex.Message}";
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
+    private async Task ExportRegionsAsync()
+    {
+        if (IsBusy)
+            return;
+
+        if (_lastAllocationGrid is null || _workingSpatialReference is null)
+        {
+            Status = "Calculate a preview before exporting influence regions.";
+            return;
+        }
+
+        SetBusy(true);
+
+        try
+        {
+            var grid = _lastAllocationGrid;
+            var workingSpatialReference = _workingSpatialReference;
+
+            var result = await QueuedTask.Run(() =>
+                InfluenceRegionOutputWriter.WriteToDefaultGeodatabase(
+                    grid,
+                    workingSpatialReference));
+
+            Status =
+                $"Created '{result.FeatureClassName}' with {result.FeatureCount} dissolved influence region(s).";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Unable to export influence regions: {ex.Message}";
         }
         finally
         {
