@@ -36,6 +36,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private SpatialReference? _workingSpatialReference;
     private int _previewResolution = 40;
     private double _extentMarginPercent = 20.0;
+    private AllocationGrid? _lastAllocationGrid;
 
     protected GeoInfluenceDockPaneViewModel()
     {
@@ -50,6 +51,9 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         ClearPreviewCommand = new RelayCommand(
             () => _ = ClearPreviewAsync());
+
+        ExportPolygonsCommand = new RelayCommand(
+            () => _ = ExportPolygonsAsync());
     }
 
     public string Heading
@@ -75,13 +79,21 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     public int PreviewResolution
     {
         get => _previewResolution;
-        set => SetProperty(ref _previewResolution, value);
+        set
+        {
+            if (SetProperty(ref _previewResolution, value))
+                _lastAllocationGrid = null;
+        }
     }
 
     public double ExtentMarginPercent
     {
         get => _extentMarginPercent;
-        set => SetProperty(ref _extentMarginPercent, value);
+        set
+        {
+            if (SetProperty(ref _extentMarginPercent, value))
+                _lastAllocationGrid = null;
+        }
     }
 
     public ObservableCollection<LayerOption> PointLayers => _pointLayers;
@@ -139,6 +151,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     public ICommand CalculatePreviewCommand { get; }
 
     public ICommand ClearPreviewCommand { get; }
+
+    public ICommand ExportPolygonsCommand { get; }
 
     protected override async Task InitializeAsync()
     {
@@ -389,6 +403,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 columns: resolution,
                 rows: resolution);
 
+            _lastAllocationGrid = grid;
+
             var workingSpatialReference = _workingSpatialReference;
             await QueuedTask.Run(() =>
                 PreviewOverlayManager.Render(
@@ -411,6 +427,42 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     {
         await QueuedTask.Run(PreviewOverlayManager.Clear);
         Status = "Allocation preview cleared.";
+    }
+
+    private async Task ExportPolygonsAsync()
+    {
+        if (IsBusy)
+            return;
+
+        if (_lastAllocationGrid is null || _workingSpatialReference is null)
+        {
+            Status = "Calculate a preview before exporting the polygon output.";
+            return;
+        }
+
+        SetBusy(true);
+
+        try
+        {
+            var grid = _lastAllocationGrid;
+            var workingSpatialReference = _workingSpatialReference;
+
+            var result = await QueuedTask.Run(() =>
+                AllocationOutputWriter.WriteToDefaultGeodatabase(
+                    grid,
+                    workingSpatialReference));
+
+            Status =
+                $"Created '{result.FeatureClassName}' with {result.FeatureCount} polygon cell(s) in the project default geodatabase.";
+        }
+        catch (Exception ex)
+        {
+            Status = $"Unable to export polygon output: {ex.Message}";
+        }
+        finally
+        {
+            SetBusy(false);
+        }
     }
 
     private void SetBusy(bool value)
@@ -438,6 +490,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     {
         LoadedSites.Clear();
         _workingSpatialReference = null;
+        _lastAllocationGrid = null;
         LoadScope = "No sites loaded.";
     }
 
