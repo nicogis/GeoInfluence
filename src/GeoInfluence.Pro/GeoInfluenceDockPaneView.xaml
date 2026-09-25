@@ -1,0 +1,47 @@
+<UserControl x:Class="GeoInfluence.Pro.GeoInfluenceDockPaneView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="520"
+             d:DesignWidth="340">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Heading}"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8" />
+
+        <TextBlock Grid.Row="1"
+                   Text="MVP 0.1 — Anisotropic Influence"
+                   Margin="0,0,0,16" />
+
+        <StackPanel Grid.Row="2">
+            <GroupBox Header="Input sites" Margin="0,0,0,10">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Point layer" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <ComboBox Grid.Column="1"
+                              IsEnabled="False"
+                              ToolTip="Point-layer selection will be implemented in the next milestone." />
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="Anisotropy">
+                <StackPanel Margin="8">
+                    <TextBlock Text="Bearing, major scale and minor scale field mapping will be added next." 
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </Grid>
+</UserControl>
