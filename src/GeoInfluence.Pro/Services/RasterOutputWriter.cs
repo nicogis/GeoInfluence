@@ -1,3 +1,4 @@
+using System.IO;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using DdlFieldDescription = ArcGIS.Core.Data.DDL.FieldDescription;
