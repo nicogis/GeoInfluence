@@ -192,7 +192,7 @@
                                 IsEnabled="{Binding CanClearPreview}"
                                 Padding="12,5"
                                 Margin="0,0,8,8"
-                                ToolTip="Remove the current preview and invalidate its export results." />
+                                ToolTip="Remove the current preview overlay. The calculated allocation remains available for export." />
                     </WrapPanel>
                 </GroupBox>
 
