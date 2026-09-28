@@ -171,42 +171,61 @@
                     </Grid>
                 </GroupBox>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <Button Content="Load influence sites"
-                            Command="{Binding LoadSitesCommand}"
-                            Padding="12,5"
-                            Margin="0,0,8,0" />
+                <GroupBox Header="Preview" Margin="0,0,0,10">
+                    <WrapPanel Margin="8">
+                        <Button Content="Load influence sites"
+                                Command="{Binding LoadSitesCommand}"
+                                IsEnabled="{Binding CanLoadSites}"
+                                Padding="12,5"
+                                Margin="0,0,8,8"
+                                ToolTip="Load and validate the selected point sites." />
 
-                    <Button Content="Calculate preview"
-                            Command="{Binding CalculatePreviewCommand}"
-                            Padding="12,5"
-                            Margin="0,0,8,0" />
+                        <Button Content="Calculate preview"
+                                Command="{Binding CalculatePreviewCommand}"
+                                IsEnabled="{Binding CanCalculatePreview}"
+                                Padding="12,5"
+                                Margin="0,0,8,8"
+                                ToolTip="Calculate the allocation grid using the current preview settings." />
 
-                    <Button Content="Clear preview"
-                            Command="{Binding ClearPreviewCommand}"
-                            Padding="12,5"
-                            Margin="0,0,8,0" />
+                        <Button Content="Clear preview"
+                                Command="{Binding ClearPreviewCommand}"
+                                IsEnabled="{Binding CanClearPreview}"
+                                Padding="12,5"
+                                Margin="0,0,8,8"
+                                ToolTip="Remove the current preview overlay. The calculated allocation remains available for export." />
+                    </WrapPanel>
+                </GroupBox>
 
-                    <Button Content="Export polygons"
-                            Command="{Binding ExportPolygonsCommand}"
-                            Padding="12,5"
-                            Margin="0,0,8,0" />
+                <GroupBox Header="Output" Margin="0,0,0,10">
+                    <WrapPanel Margin="8">
+                        <Button Content="Export cells"
+                                Command="{Binding ExportPolygonsCommand}"
+                                IsEnabled="{Binding CanExport}"
+                                Padding="12,5"
+                                Margin="0,0,8,8"
+                                ToolTip="Write the allocation grid cells to the project default geodatabase." />
 
-                    <Button Content="Export regions"
-                            Command="{Binding ExportRegionsCommand}"
-                            Padding="12,5"
-                            Margin="0,0,8,0" />
+                        <Button Content="Export regions"
+                                Command="{Binding ExportRegionsCommand}"
+                                IsEnabled="{Binding CanExport}"
+                                Padding="12,5"
+                                Margin="0,0,8,8"
+                                ToolTip="Dissolve allocation cells by SiteId into influence regions." />
 
-                    <Button Content="Export raster"
-                            Command="{Binding ExportRasterCommand}"
-                            Padding="12,5" />
-                </StackPanel>
+                        <Button Content="Export raster"
+                                Command="{Binding ExportRasterCommand}"
+                                IsEnabled="{Binding CanExport}"
+                                Padding="12,5"
+                                Margin="0,0,8,8"
+                                ToolTip="Create an integer SiteId allocation raster in the project default geodatabase." />
+                    </WrapPanel>
+                </GroupBox>
 
                 <TextBlock Text="{Binding LoadScope}"
                            Margin="0,0,0,8"
                            FontWeight="SemiBold" />
 
-                <TextBlock Text="Preview output is temporary. Export polygons writes grid cells; Export regions dissolves cells by SiteId; Export raster creates an integer allocation raster in the project default geodatabase."
+                <TextBlock Text="Preview output is temporary. Export cells writes the allocation grid; Export regions dissolves cells by SiteId; Export raster creates an integer allocation raster in the project default geodatabase."
                            Margin="0,0,0,8"
                            TextWrapping="Wrap"
                            Opacity="0.75" />
@@ -233,10 +252,46 @@
 
         <Border Grid.Row="3"
                 Margin="0,12,0,0"
-                Padding="8"
-                BorderThickness="1">
-            <TextBlock Text="{Binding Status}"
-                       TextWrapping="Wrap" />
+                Padding="10"
+                BorderThickness="1.5"
+                CornerRadius="4">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="#FFF3F6FA" />
+                    <Setter Property="BorderBrush" Value="#FF7A8A99" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding StatusLevel}" Value="Success">
+                            <Setter Property="Background" Value="#FFEAF6EC" />
+                            <Setter Property="BorderBrush" Value="#FF4C8C57" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding StatusLevel}" Value="Warning">
+                            <Setter Property="Background" Value="#FFFFF4D6" />
+                            <Setter Property="BorderBrush" Value="#FFB7791F" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding StatusLevel}" Value="Error">
+                            <Setter Property="Background" Value="#FFFCE8E8" />
+                            <Setter Property="BorderBrush" Value="#FFB23A3A" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding StatusIcon}"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           Margin="0,0,8,0"
+                           VerticalAlignment="Top" />
+
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Status}"
+                           TextWrapping="Wrap" />
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

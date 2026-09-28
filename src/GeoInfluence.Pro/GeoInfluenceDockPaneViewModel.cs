@@ -7,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Dialogs;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using GeoInfluence.Core.Allocation;
@@ -33,12 +34,15 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private FieldOption? _selectedMinorScaleField;
     private string _heading = "Spatial Influence Modeling";
     private string _status = "Select or refresh a point layer from the active map.";
+    private string _statusLevel = "Info";
+    private string _statusIcon = "ℹ";
     private string _loadScope = "No sites loaded.";
     private bool _isBusy;
     private SpatialReference? _workingSpatialReference;
     private int _previewResolution = 40;
     private double _extentMarginPercent = 20.0;
     private bool _showConfidence;
+    private bool _hasPreviewOverlay;
     private AllocationGrid? _lastAllocationGrid;
 
     protected GeoInfluenceDockPaneViewModel()
@@ -77,6 +81,18 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         private set => SetProperty(ref _status, value);
     }
 
+    public string StatusLevel
+    {
+        get => _statusLevel;
+        private set => SetProperty(ref _statusLevel, value);
+    }
+
+    public string StatusIcon
+    {
+        get => _statusIcon;
+        private set => SetProperty(ref _statusIcon, value);
+    }
+
     public string LoadScope
     {
         get => _loadScope;
@@ -84,6 +100,29 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     }
 
     public override bool IsBusy => _isBusy;
+
+    public bool CanLoadSites =>
+        !IsBusy &&
+        SelectedLayer is not null &&
+        SelectedIdField is not null &&
+        SelectedWeightField is not null &&
+        SelectedBearingField is not null &&
+        SelectedMajorScaleField is not null &&
+        SelectedMinorScaleField is not null;
+
+    public bool CanCalculatePreview =>
+        !IsBusy &&
+        LoadedSites.Count > 0 &&
+        _workingSpatialReference is not null;
+
+    public bool CanExport =>
+        !IsBusy &&
+        _lastAllocationGrid is not null &&
+        _workingSpatialReference is not null;
+
+    public bool CanClearPreview =>
+        !IsBusy &&
+        _hasPreviewOverlay;
 
     public int PreviewResolution
     {
@@ -125,38 +164,61 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         set
         {
             if (SetProperty(ref _selectedLayer, value))
+            {
+                NotifyActionStateChanged();
                 _ = LoadFieldsAsync(value);
+            }
         }
     }
 
     public FieldOption? SelectedIdField
     {
         get => _selectedIdField;
-        set => SetProperty(ref _selectedIdField, value);
+        set
+        {
+            if (SetProperty(ref _selectedIdField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedWeightField
     {
         get => _selectedWeightField;
-        set => SetProperty(ref _selectedWeightField, value);
+        set
+        {
+            if (SetProperty(ref _selectedWeightField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedBearingField
     {
         get => _selectedBearingField;
-        set => SetProperty(ref _selectedBearingField, value);
+        set
+        {
+            if (SetProperty(ref _selectedBearingField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedMajorScaleField
     {
         get => _selectedMajorScaleField;
-        set => SetProperty(ref _selectedMajorScaleField, value);
+        set
+        {
+            if (SetProperty(ref _selectedMajorScaleField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedMinorScaleField
     {
         get => _selectedMinorScaleField;
-        set => SetProperty(ref _selectedMinorScaleField, value);
+        set
+        {
+            if (SetProperty(ref _selectedMinorScaleField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public ICommand RefreshLayersCommand { get; }
@@ -220,13 +282,14 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                                     StringComparison.Ordinal))
                             ?? PointLayers.FirstOrDefault();
 
-            Status = PointLayers.Count == 0
-                ? "No point feature layers found in the active map."
-                : $"{PointLayers.Count} point layer(s) available.";
+            if (PointLayers.Count == 0)
+                SetStatus("No point feature layers found in the active map.", "Warning");
+            else
+                SetStatus($"{PointLayers.Count} point layer(s) available.", "Info");
         }
         catch (Exception ex)
         {
-            Status = $"Unable to read point layers: {ex.Message}";
+            SetStatus($"Unable to read point layers: {ex.Message}", "Error", showDialog: true);
         }
         finally
         {
@@ -241,7 +304,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         if (layerOption is null)
         {
-            Status = "Select a point layer.";
+            SetStatus("Select a point layer.", "Warning");
             return;
         }
 
@@ -277,11 +340,11 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             SelectedMajorScaleField = FindFieldByName("MajorScale");
             SelectedMinorScaleField = FindFieldByName("MinorScale");
 
-            Status = $"{fields.Count} field(s) loaded from '{layerOption.Name}'.";
+            SetStatus($"{fields.Count} field(s) loaded from '{layerOption.Name}'.", "Info");
         }
         catch (Exception ex)
         {
-            Status = $"Unable to read fields from '{layerOption.Name}': {ex.Message}";
+            SetStatus($"Unable to read fields from '{layerOption.Name}': {ex.Message}", "Error", showDialog: true);
         }
         finally
         {
@@ -301,7 +364,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             SelectedMajorScaleField is null ||
             SelectedMinorScaleField is null)
         {
-            Status = "Select a point layer and map all required fields before loading sites.";
+            SetStatus("Select a point layer and map all required fields before loading sites.", "Warning");
             return;
         }
 
@@ -323,6 +386,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 LoadedSites.Add(site);
 
             _workingSpatialReference = result.WorkingSpatialReference;
+            NotifyActionStateChanged();
 
             var sourceText = result.UsedSelection
                 ? $"{LoadedSites.Count} selected site(s) loaded."
@@ -334,14 +398,15 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
             LoadScope = sourceText + spatialReferenceText;
 
-            Status = LoadedSites.Count == 0
-                ? "No point features were available to load."
-                : "Influence sites validated and loaded into GeoInfluence.Core using projected working coordinates.";
+            if (LoadedSites.Count == 0)
+                SetStatus("No point features were available to load.", "Warning");
+            else
+                SetStatus("Influence sites validated and loaded into GeoInfluence.Core using projected working coordinates.", "Success");
         }
         catch (Exception ex)
         {
             ClearLoadedSites();
-            Status = $"Unable to load influence sites: {ex.Message}";
+            SetStatus($"Unable to load influence sites: {ex.Message}", "Error", showDialog: true);
         }
         finally
         {
@@ -356,13 +421,13 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         if (LoadedSites.Count == 0 || _workingSpatialReference is null)
         {
-            Status = "Load at least one influence site before calculating the preview.";
+            SetStatus("Load at least one influence site before calculating the preview.", "Warning");
             return;
         }
 
         if (PreviewResolution < 10 || PreviewResolution > 200)
         {
-            Status = "Preview resolution must be between 10 and 200.";
+            SetStatus("Preview resolution must be between 10 and 200.", "Warning");
             return;
         }
 
@@ -370,7 +435,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
             ExtentMarginPercent < 0 ||
             ExtentMarginPercent > 200)
         {
-            Status = "Extent margin must be between 0 and 200 percent.";
+            SetStatus("Extent margin must be between 0 and 200 percent.", "Warning");
             return;
         }
 
@@ -423,6 +488,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 rows: resolution);
 
             _lastAllocationGrid = grid;
+            NotifyActionStateChanged();
 
             var workingSpatialReference = _workingSpatialReference;
             var showConfidence = ShowConfidence;
@@ -433,13 +499,18 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                     workingSpatialReference,
                     showConfidence));
 
-            Status = ShowConfidence
-                ? $"Confidence preview rendered: {resolution} x {resolution} cells. More opaque cells have a stronger winner margin."
-                : $"Preview rendered: {resolution} x {resolution} cells, {sites.Count} influence site(s).";
+            _hasPreviewOverlay = true;
+            NotifyActionStateChanged();
+
+            SetStatus(
+                ShowConfidence
+                    ? $"Confidence preview rendered: {resolution} x {resolution} cells. More opaque cells have a stronger winner margin."
+                    : $"Preview rendered: {resolution} x {resolution} cells, {sites.Count} influence site(s).",
+                "Success");
         }
         catch (Exception ex)
         {
-            Status = $"Unable to calculate preview: {ex.Message}";
+            SetStatus($"Unable to calculate preview: {ex.Message}", "Error", showDialog: true);
         }
         finally
         {
@@ -450,7 +521,9 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private async Task ClearPreviewAsync()
     {
         await QueuedTask.Run(PreviewOverlayManager.Clear);
-        Status = "Allocation preview cleared.";
+        _hasPreviewOverlay = false;
+        NotifyActionStateChanged();
+        SetStatus("Allocation preview cleared. The calculated allocation remains available for export.", "Info");
     }
 
     private async Task ExportPolygonsAsync()
@@ -460,7 +533,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         if (_lastAllocationGrid is null || _workingSpatialReference is null)
         {
-            Status = "Calculate a preview before exporting the polygon output.";
+            SetStatus("Calculate a preview before exporting the cell output.", "Warning");
             return;
         }
 
@@ -476,12 +549,13 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                     grid,
                     workingSpatialReference));
 
-            Status =
-                $"Created '{result.FeatureClassName}' with {result.FeatureCount} polygon cell(s) in the project default geodatabase.";
+            SetStatus(
+                $"Created '{result.FeatureClassName}' with {result.FeatureCount} polygon cell(s) in the project default geodatabase.",
+                "Success");
         }
         catch (Exception ex)
         {
-            Status = $"Unable to export polygon output: {ex.Message}";
+            SetStatus($"Unable to export cell output: {ex.Message}", "Error", showDialog: true);
         }
         finally
         {
@@ -496,7 +570,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         if (_lastAllocationGrid is null || _workingSpatialReference is null)
         {
-            Status = "Calculate a preview before exporting influence regions.";
+            SetStatus("Calculate a preview before exporting influence regions.", "Warning");
             return;
         }
 
@@ -512,12 +586,13 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                     grid,
                     workingSpatialReference));
 
-            Status =
-                $"Created '{result.FeatureClassName}' with {result.FeatureCount} dissolved influence region(s).";
+            SetStatus(
+                $"Created '{result.FeatureClassName}' with {result.FeatureCount} dissolved influence region(s).",
+                "Success");
         }
         catch (Exception ex)
         {
-            Status = $"Unable to export influence regions: {ex.Message}";
+            SetStatus($"Unable to export influence regions: {ex.Message}", "Error", showDialog: true);
         }
         finally
         {
@@ -532,7 +607,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         if (_lastAllocationGrid is null || _workingSpatialReference is null)
         {
-            Status = "Calculate a preview before exporting the raster output.";
+            SetStatus("Calculate a preview before exporting the raster output.", "Warning");
             return;
         }
 
@@ -584,13 +659,22 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                     grid,
                     rasterName));
 
-            Status = symbologyApplied
-                ? $"Created raster '{rasterName}' with cell size {preparation.CellSize:F3} map unit(s) and SiteId symbology."
-                : $"Created raster '{rasterName}' with cell size {preparation.CellSize:F3} map unit(s). The raster was created, but its SiteId symbology could not be applied automatically.";
+            if (symbologyApplied)
+            {
+                SetStatus(
+                    $"Created raster '{rasterName}' with cell size {preparation.CellSize:F3} map unit(s) and SiteId symbology.",
+                    "Success");
+            }
+            else
+            {
+                SetStatus(
+                    $"Created raster '{rasterName}' with cell size {preparation.CellSize:F3} map unit(s). The raster was created, but its SiteId symbology could not be applied automatically.",
+                    "Warning");
+            }
         }
         catch (Exception ex)
         {
-            Status = $"Unable to export raster output: {ex.Message}";
+            SetStatus($"Unable to export raster output: {ex.Message}", "Error", showDialog: true);
         }
         finally
         {
@@ -619,6 +703,31 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         }
     }
 
+    private void SetStatus(
+        string message,
+        string level = "Info",
+        bool showDialog = false)
+    {
+        Status = message;
+        StatusLevel = level;
+        StatusIcon = level switch
+        {
+            "Success" => "✓",
+            "Warning" => "!",
+            "Error" => "✕",
+            _ => "ℹ"
+        };
+
+        if (showDialog && string.Equals(level, "Error", StringComparison.Ordinal))
+        {
+            MessageBox.Show(
+                message,
+                "GeoInfluence",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
+    }
+
     private void SetBusy(bool value)
     {
         if (_isBusy == value)
@@ -626,6 +735,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         _isBusy = value;
         NotifyPropertyChanged(nameof(IsBusy));
+        NotifyActionStateChanged();
     }
 
     private void ClearFieldSelections()
@@ -645,7 +755,17 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         LoadedSites.Clear();
         _workingSpatialReference = null;
         _lastAllocationGrid = null;
+        _hasPreviewOverlay = false;
         LoadScope = "No sites loaded.";
+        NotifyActionStateChanged();
+    }
+
+    private void NotifyActionStateChanged()
+    {
+        NotifyPropertyChanged(nameof(CanLoadSites));
+        NotifyPropertyChanged(nameof(CanCalculatePreview));
+        NotifyPropertyChanged(nameof(CanExport));
+        NotifyPropertyChanged(nameof(CanClearPreview));
     }
 
     private FieldOption? FindFieldByName(string name)
