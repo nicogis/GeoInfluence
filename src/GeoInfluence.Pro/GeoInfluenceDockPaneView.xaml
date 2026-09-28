@@ -252,10 +252,46 @@
 
         <Border Grid.Row="3"
                 Margin="0,12,0,0"
-                Padding="8"
-                BorderThickness="1">
-            <TextBlock Text="{Binding Status}"
-                       TextWrapping="Wrap" />
+                Padding="10"
+                BorderThickness="1.5"
+                CornerRadius="4">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="#FFF3F6FA" />
+                    <Setter Property="BorderBrush" Value="#FF7A8A99" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding StatusLevel}" Value="Success">
+                            <Setter Property="Background" Value="#FFEAF6EC" />
+                            <Setter Property="BorderBrush" Value="#FF4C8C57" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding StatusLevel}" Value="Warning">
+                            <Setter Property="Background" Value="#FFFFF4D6" />
+                            <Setter Property="BorderBrush" Value="#FFB7791F" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding StatusLevel}" Value="Error">
+                            <Setter Property="Background" Value="#FFFCE8E8" />
+                            <Setter Property="BorderBrush" Value="#FFB23A3A" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding StatusIcon}"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           Margin="0,0,8,0"
+                           VerticalAlignment="Top" />
+
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Status}"
+                           TextWrapping="Wrap" />
+            </Grid>
         </Border>
     </Grid>
 </UserControl>
