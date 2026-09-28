@@ -7,6 +7,7 @@
   <AddInInfo id="{54E83604-64A1-4C12-A10B-5A54ACAA4A17}" version="0.1.0" desktopVersion="3.7">
     <Name>GeoInfluence</Name>
     <Description>Advanced spatial influence modeling for ArcGIS Pro.</Description>
+    <Image>Images\GeoInfluence32.png</Image>
     <Author>NicoGIS</Author>
     <Company>NicoGIS</Company>
     <Date>2026-09-25</Date>
@@ -36,7 +37,9 @@
         <button id="GeoInfluence_Pro_ShowDockPaneButton"
                 caption="GeoInfluence"
                 className="ShowGeoInfluenceDockPaneButton"
-                loadOnClick="true">
+                loadOnClick="true"
+                smallImage="Images\GeoInfluence16.png"
+                largeImage="Images\GeoInfluence32.png">
           <tooltip heading="GeoInfluence">
             Open the GeoInfluence spatial influence modeling pane.
             <disabledText />
