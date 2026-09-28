@@ -85,6 +85,29 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
     public override bool IsBusy => _isBusy;
 
+    public bool CanLoadSites =>
+        !IsBusy &&
+        SelectedLayer is not null &&
+        SelectedIdField is not null &&
+        SelectedWeightField is not null &&
+        SelectedBearingField is not null &&
+        SelectedMajorScaleField is not null &&
+        SelectedMinorScaleField is not null;
+
+    public bool CanCalculatePreview =>
+        !IsBusy &&
+        LoadedSites.Count > 0 &&
+        _workingSpatialReference is not null;
+
+    public bool CanExport =>
+        !IsBusy &&
+        _lastAllocationGrid is not null &&
+        _workingSpatialReference is not null;
+
+    public bool CanClearPreview =>
+        !IsBusy &&
+        _lastAllocationGrid is not null;
+
     public int PreviewResolution
     {
         get => _previewResolution;
@@ -125,38 +148,61 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         set
         {
             if (SetProperty(ref _selectedLayer, value))
+            {
+                NotifyActionStateChanged();
                 _ = LoadFieldsAsync(value);
+            }
         }
     }
 
     public FieldOption? SelectedIdField
     {
         get => _selectedIdField;
-        set => SetProperty(ref _selectedIdField, value);
+        set
+        {
+            if (SetProperty(ref _selectedIdField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedWeightField
     {
         get => _selectedWeightField;
-        set => SetProperty(ref _selectedWeightField, value);
+        set
+        {
+            if (SetProperty(ref _selectedWeightField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedBearingField
     {
         get => _selectedBearingField;
-        set => SetProperty(ref _selectedBearingField, value);
+        set
+        {
+            if (SetProperty(ref _selectedBearingField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedMajorScaleField
     {
         get => _selectedMajorScaleField;
-        set => SetProperty(ref _selectedMajorScaleField, value);
+        set
+        {
+            if (SetProperty(ref _selectedMajorScaleField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public FieldOption? SelectedMinorScaleField
     {
         get => _selectedMinorScaleField;
-        set => SetProperty(ref _selectedMinorScaleField, value);
+        set
+        {
+            if (SetProperty(ref _selectedMinorScaleField, value))
+                NotifyActionStateChanged();
+        }
     }
 
     public ICommand RefreshLayersCommand { get; }
@@ -323,6 +369,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 LoadedSites.Add(site);
 
             _workingSpatialReference = result.WorkingSpatialReference;
+            NotifyActionStateChanged();
 
             var sourceText = result.UsedSelection
                 ? $"{LoadedSites.Count} selected site(s) loaded."
@@ -423,6 +470,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                 rows: resolution);
 
             _lastAllocationGrid = grid;
+            NotifyActionStateChanged();
 
             var workingSpatialReference = _workingSpatialReference;
             var showConfidence = ShowConfidence;
@@ -450,6 +498,8 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private async Task ClearPreviewAsync()
     {
         await QueuedTask.Run(PreviewOverlayManager.Clear);
+        _lastAllocationGrid = null;
+        NotifyActionStateChanged();
         Status = "Allocation preview cleared.";
     }
 
@@ -626,6 +676,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
         _isBusy = value;
         NotifyPropertyChanged(nameof(IsBusy));
+        NotifyActionStateChanged();
     }
 
     private void ClearFieldSelections()
@@ -646,6 +697,15 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         _workingSpatialReference = null;
         _lastAllocationGrid = null;
         LoadScope = "No sites loaded.";
+        NotifyActionStateChanged();
+    }
+
+    private void NotifyActionStateChanged()
+    {
+        NotifyPropertyChanged(nameof(CanLoadSites));
+        NotifyPropertyChanged(nameof(CanCalculatePreview));
+        NotifyPropertyChanged(nameof(CanExport));
+        NotifyPropertyChanged(nameof(CanClearPreview));
     }
 
     private FieldOption? FindFieldByName(string name)
