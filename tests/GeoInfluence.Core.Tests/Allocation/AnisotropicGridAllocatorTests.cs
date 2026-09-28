@@ -79,6 +79,60 @@ public sealed class AnisotropicGridAllocatorTests
     }
 
     [Fact]
+    public void Allocate_StoresRunnerUpMarginAndConfidence()
+    {
+        var sites = new[]
+        {
+            new InfluenceSite("A", 0, 0),
+            new InfluenceSite("B", 10, 0)
+        };
+
+        var grid = new AnisotropicGridAllocator().Allocate(
+            sites,
+            xMin: 1,
+            yMin: -0.5,
+            xMax: 2,
+            yMax: 0.5,
+            columns: 1,
+            rows: 1);
+
+        var cell = Assert.Single(grid.Cells);
+
+        Assert.Equal("A", cell.SiteId);
+        Assert.True(cell.RunnerUpScore > cell.Score);
+        Assert.Equal(
+            cell.RunnerUpScore - cell.Score,
+            cell.ScoreMargin,
+            precision: 10);
+        Assert.InRange(cell.Confidence, 0.0, 1.0);
+        Assert.True(cell.Confidence > 0.0);
+    }
+
+    [Fact]
+    public void Allocate_WithSingleSite_HasMaximumConfidence()
+    {
+        var sites = new[]
+        {
+            new InfluenceSite("A", 0, 0)
+        };
+
+        var grid = new AnisotropicGridAllocator().Allocate(
+            sites,
+            xMin: 0,
+            yMin: 0,
+            xMax: 1,
+            yMax: 1,
+            columns: 1,
+            rows: 1);
+
+        var cell = Assert.Single(grid.Cells);
+
+        Assert.True(double.IsPositiveInfinity(cell.RunnerUpScore));
+        Assert.True(double.IsPositiveInfinity(cell.ScoreMargin));
+        Assert.Equal(1.0, cell.Confidence);
+    }
+
+    [Fact]
     public void Allocate_WithInvalidWeight_Throws()
     {
         var sites = new[]

@@ -133,6 +133,10 @@
 
                 <GroupBox Header="Preview settings" Margin="0,0,0,10">
                     <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="90" />
@@ -157,6 +161,13 @@
                         <TextBox Grid.Column="4"
                                  Text="{Binding ExtentMarginPercent, UpdateSourceTrigger=PropertyChanged, StringFormat=F0}"
                                  HorizontalContentAlignment="Right" />
+
+                        <CheckBox Grid.Row="1"
+                                  Grid.ColumnSpan="5"
+                                  Margin="0,8,0,0"
+                                  Content="Confidence shading"
+                                  IsChecked="{Binding ShowConfidence, Mode=TwoWay}"
+                                  ToolTip="More opaque cells have a larger score margin over the second-best site." />
                     </Grid>
                 </GroupBox>
 
