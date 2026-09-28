@@ -7,6 +7,7 @@
   <AddInInfo id="{54E83604-64A1-4C12-A10B-5A54ACAA4A17}" version="0.1.0" desktopVersion="3.7">
     <Name>GeoInfluence</Name>
     <Description>Advanced spatial influence modeling for ArcGIS Pro.</Description>
+    <Image>Images\GeoInfluence32.png</Image>
     <Author>NicoGIS</Author>
     <Company>NicoGIS</Company>
     <Date>2026-09-25</Date>
@@ -19,7 +20,7 @@
                   autoLoad="false"
                   caption="GeoInfluence">
       <tabs>
-        <tab id="GeoInfluence_Pro_Tab" caption="GeoInfluence">
+        <tab id="GeoInfluence_Pro_Tab" caption="GeoInfluence" keytip="G">
           <group refID="GeoInfluence_Pro_Group" />
         </tab>
       </tabs>
@@ -27,7 +28,8 @@
       <groups>
         <group id="GeoInfluence_Pro_Group"
                caption="Spatial Influence"
-               appearsOnAddInTab="false">
+               appearsOnAddInTab="false"
+               keytip="GI">
           <button refID="GeoInfluence_Pro_ShowDockPaneButton" size="large" />
         </group>
       </groups>
@@ -35,8 +37,11 @@
       <controls>
         <button id="GeoInfluence_Pro_ShowDockPaneButton"
                 caption="GeoInfluence"
+                keytip="G"
                 className="ShowGeoInfluenceDockPaneButton"
-                loadOnClick="true">
+                loadOnClick="true"
+                smallImage="Images\GeoInfluence16.png"
+                largeImage="Images\GeoInfluence32.png">
           <tooltip heading="GeoInfluence">
             Open the GeoInfluence spatial influence modeling pane.
             <disabledText />
@@ -48,7 +53,6 @@
         <dockPane id="GeoInfluence_Pro_DockPane"
                   caption="GeoInfluence"
                   className="GeoInfluenceDockPaneViewModel"
-                  initiallyVisible="false"
                   dock="group"
                   dockWith="esri_core_contentsDockPane">
           <content className="GeoInfluenceDockPaneView" />
