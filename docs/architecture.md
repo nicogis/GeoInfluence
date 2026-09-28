@@ -24,14 +24,16 @@ GeoInfluence
 
 ## MVP 0.1 — Anisotropic Influence
 
-The first milestone will:
+The 0.1 milestone implements:
 
 - read point sites from an ArcGIS Pro layer;
 - map fields to weight, bearing, major scale and minor scale;
 - compute an anisotropic influence allocation;
-- generate an output raster;
-- optionally polygonize the winning-site allocation;
-- provide an interactive preview in an ArcGIS Pro dockpane.
+- provide an interactive preview in an ArcGIS Pro dock pane;
+- expose winner-confidence diagnostics;
+- export grid cells;
+- dissolve influence regions by SiteId;
+- generate a categorical raster output.
 
 The initial mathematical primitive is an elliptical anisotropic distance:
 
