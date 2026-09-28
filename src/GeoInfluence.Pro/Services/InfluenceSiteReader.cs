@@ -73,6 +73,24 @@ internal static class InfluenceSiteReader
                 throw new InvalidOperationException(
                     $"Feature {oid}: field '{weightField.Name}' must contain a finite value greater than zero.");
 
+            if (!double.IsFinite(bearing))
+            {
+                throw new InvalidOperationException(
+                    $"Feature {oid}: field '{bearingField.Name}' must contain a finite bearing value.");
+            }
+
+            if (!double.IsFinite(majorScale) || majorScale <= 0)
+            {
+                throw new InvalidOperationException(
+                    $"Feature {oid}: field '{majorScaleField.Name}' must contain a finite value greater than zero.");
+            }
+
+            if (!double.IsFinite(minorScale) || minorScale <= 0)
+            {
+                throw new InvalidOperationException(
+                    $"Feature {oid}: field '{minorScaleField.Name}' must contain a finite value greater than zero.");
+            }
+
             var anisotropy = new AnisotropyParameters(
                 bearing,
                 majorScale,
@@ -97,6 +115,24 @@ internal static class InfluenceSiteReader
                 useSelection,
                 mapSpatialReference,
                 false);
+        }
+
+        var duplicateIds = rawSites
+            .GroupBy(site => site.Id, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToList();
+
+        if (duplicateIds.Count > 0)
+        {
+            var preview = string.Join(", ", duplicateIds.Take(5));
+            var suffix = duplicateIds.Count > 5
+                ? $" (+{duplicateIds.Count - 5} more)"
+                : string.Empty;
+
+            throw new InvalidOperationException(
+                $"Site ID values must be unique. Duplicate ID(s): {preview}{suffix}.");
         }
 
         var workingSpatialReference = mapSpatialReference;
