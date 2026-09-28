@@ -39,6 +39,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private int _previewResolution = 40;
     private double _extentMarginPercent = 20.0;
     private bool _showConfidence;
+    private bool _hasPreviewOverlay;
     private AllocationGrid? _lastAllocationGrid;
 
     protected GeoInfluenceDockPaneViewModel()
@@ -106,7 +107,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
 
     public bool CanClearPreview =>
         !IsBusy &&
-        _lastAllocationGrid is not null;
+        _hasPreviewOverlay;
 
     public int PreviewResolution
     {
@@ -481,6 +482,9 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
                     workingSpatialReference,
                     showConfidence));
 
+            _hasPreviewOverlay = true;
+            NotifyActionStateChanged();
+
             Status = ShowConfidence
                 ? $"Confidence preview rendered: {resolution} x {resolution} cells. More opaque cells have a stronger winner margin."
                 : $"Preview rendered: {resolution} x {resolution} cells, {sites.Count} influence site(s).";
@@ -498,9 +502,9 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
     private async Task ClearPreviewAsync()
     {
         await QueuedTask.Run(PreviewOverlayManager.Clear);
-        _lastAllocationGrid = null;
+        _hasPreviewOverlay = false;
         NotifyActionStateChanged();
-        Status = "Allocation preview cleared.";
+        Status = "Allocation preview cleared. The calculated allocation remains available for export.";
     }
 
     private async Task ExportPolygonsAsync()
@@ -696,6 +700,7 @@ internal class GeoInfluenceDockPaneViewModel : DockPane
         LoadedSites.Clear();
         _workingSpatialReference = null;
         _lastAllocationGrid = null;
+        _hasPreviewOverlay = false;
         LoadScope = "No sites loaded.";
         NotifyActionStateChanged();
     }
