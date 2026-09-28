@@ -141,6 +141,22 @@ Integer categorical raster where pixel values map back to SiteId classes. GeoInf
 
 All persistent outputs are currently written to the ArcGIS Pro project default geodatabase.
 
+## Screenshots
+
+### Allocation preview
+
+![GeoInfluence allocation preview](docs/screenshots/04-allocation-preview.png)
+
+### Confidence preview
+
+![GeoInfluence confidence preview](docs/screenshots/05-confidence-preview.png)
+
+### Influence regions
+
+![GeoInfluence dissolved regions](docs/screenshots/06-regions-output.png)
+
+See the [complete screenshot gallery](docs/screenshots/README.md) for the ribbon, dock pane, preview, confidence, regions, and raster output.
+
 ## Architecture
 
 ```text
