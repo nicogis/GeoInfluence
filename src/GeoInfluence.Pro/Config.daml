@@ -28,7 +28,8 @@
       <groups>
         <group id="GeoInfluence_Pro_Group"
                caption="Spatial Influence"
-               appearsOnAddInTab="false">
+               appearsOnAddInTab="false"
+               keytip="GI">
           <button refID="GeoInfluence_Pro_ShowDockPaneButton" size="large" />
         </group>
       </groups>
@@ -36,6 +37,7 @@
       <controls>
         <button id="GeoInfluence_Pro_ShowDockPaneButton"
                 caption="GeoInfluence"
+                keytip="G"
                 className="ShowGeoInfluenceDockPaneButton"
                 loadOnClick="true"
                 smallImage="Images\GeoInfluence16.png"
@@ -51,7 +53,6 @@
         <dockPane id="GeoInfluence_Pro_DockPane"
                   caption="GeoInfluence"
                   className="GeoInfluenceDockPaneViewModel"
-                  initiallyVisible="false"
                   dock="group"
                   dockWith="esri_core_contentsDockPane">
           <content className="GeoInfluenceDockPaneView" />
