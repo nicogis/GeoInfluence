@@ -17,6 +17,10 @@
   <ItemGroup>
     <None Remove="Config.daml" />
     <Content Include="Config.daml" />
+    <Content Include="Images\GeoInfluence16.png" />
+    <Content Include="Images\GeoInfluence32.png" />
+    <Content Include="DarkImages\GeoInfluence16.png" />
+    <Content Include="DarkImages\GeoInfluence32.png" />
     <None Include="Properties\launchSettings.json" />
   </ItemGroup>
 
