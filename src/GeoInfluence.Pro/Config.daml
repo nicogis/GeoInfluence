@@ -20,7 +20,7 @@
                   autoLoad="false"
                   caption="GeoInfluence">
       <tabs>
-        <tab id="GeoInfluence_Pro_Tab" caption="GeoInfluence">
+        <tab id="GeoInfluence_Pro_Tab" caption="GeoInfluence" keytip="G">
           <group refID="GeoInfluence_Pro_Group" />
         </tab>
       </tabs>
