@@ -77,7 +77,7 @@ Confidence shading is diagnostic only. GeoInfluence does not silently remove wea
 - Visual Studio 2026
 - Windows x64
 
-The ArcGIS Pro 3.7 SDK targets .NET 10 and Visual Studio 2026. citeturn979594search0
+The ArcGIS Pro 3.7 SDK targets .NET 10 and Visual Studio 2026.
 
 ## Build from source
 
@@ -91,7 +91,7 @@ You can also build a release package from a Developer PowerShell:
 dotnet build .\src\GeoInfluence.Pro\GeoInfluence.Pro.csproj -c Release
 ```
 
-The ArcGIS Pro SDK MSBuild targets package the add-in as an `.esriAddInX` during the Release build. Community add-in examples place that package under the project's `bin\Release` output. citeturn209046search0turn209046search1
+The ArcGIS Pro SDK MSBuild targets package the add-in as an `.esriAddInX` during the Release build. The packaging script searches the project's Release output and copies the package into `artifacts\release`.
 
 For a repeatable release copy, use:
 
