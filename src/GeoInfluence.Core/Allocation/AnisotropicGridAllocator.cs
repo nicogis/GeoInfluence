@@ -1,5 +1,6 @@
 using GeoInfluence.Core.Distance;
 using GeoInfluence.Core.Models;
+using GeoInfluence.Core.Influence;
 
 namespace GeoInfluence.Core.Allocation;
 
@@ -10,10 +11,14 @@ namespace GeoInfluence.Core.Allocation;
 public sealed class AnisotropicGridAllocator
 {
     private readonly IDistanceMetric _distanceMetric;
+    private readonly IInfluenceScoreModel _influenceScoreModel;
 
-    public AnisotropicGridAllocator(IDistanceMetric? distanceMetric = null)
+    public AnisotropicGridAllocator(
+        IDistanceMetric? distanceMetric = null,
+        IInfluenceScoreModel? influenceScoreModel = null)
     {
         _distanceMetric = distanceMetric ?? new AnisotropicDistanceMetric();
+        _influenceScoreModel = influenceScoreModel ?? new WeightedDistanceInfluenceScoreModel();
     }
 
     public AllocationGrid Allocate(
@@ -69,12 +74,12 @@ public sealed class AnisotropicGridAllocator
                 var centerX = xMin + ((column + 0.5) * cellWidth);
 
                 var winnerIndex = 0;
-                var winnerScore = WeightedScore(sites[0], centerX, centerY);
+                var winnerScore = CalculateScore(sites[0], centerX, centerY);
                 var runnerUpScore = double.PositiveInfinity;
 
                 for (var siteIndex = 1; siteIndex < sites.Count; siteIndex++)
                 {
-                    var score = WeightedScore(sites[siteIndex], centerX, centerY);
+                    var score = CalculateScore(sites[siteIndex], centerX, centerY);
 
                     if (score < winnerScore)
                     {
@@ -124,8 +129,17 @@ public sealed class AnisotropicGridAllocator
             Cells: cells);
     }
 
-    private double WeightedScore(InfluenceSite site, double x, double y)
+    private double CalculateScore(InfluenceSite site, double x, double y)
     {
-        return _distanceMetric.Calculate(site, x, y) / site.Weight;
+        var effectiveDistance = _distanceMetric.Calculate(site, x, y);
+        var score = _influenceScoreModel.CalculateScore(site, effectiveDistance, x, y);
+
+        if (!double.IsFinite(score) || score < 0)
+        {
+            throw new InvalidOperationException(
+                $"Influence score model returned an invalid score for site '{site.Id}'.");
+        }
+
+        return score;
     }
 }

@@ -1,5 +1,6 @@
 using GeoInfluence.Core.Allocation;
 using GeoInfluence.Core.Models;
+using GeoInfluence.Core.Influence;
 
 namespace GeoInfluence.Core.Tests.Allocation;
 
@@ -149,5 +150,76 @@ public sealed class AnisotropicGridAllocatorTests
                 10,
                 10,
                 10));
+    }
+    [Fact]
+    public void Allocate_CustomInfluenceModel_CanChangeWinner()
+    {
+        var sites = new[]
+        {
+            new InfluenceSite("A", 0, 0),
+            new InfluenceSite("B", 10, 0)
+        };
+
+        var allocator = new AnisotropicGridAllocator(
+            influenceScoreModel: new FavorSiteBInfluenceScoreModel());
+
+        var grid = allocator.Allocate(
+            sites,
+            xMin: 1,
+            yMin: -0.5,
+            xMax: 2,
+            yMax: 0.5,
+            columns: 1,
+            rows: 1);
+
+        Assert.Equal("B", Assert.Single(grid.Cells).SiteId);
+    }
+
+    [Fact]
+    public void Allocate_CustomInfluenceModelReturningInvalidScore_Throws()
+    {
+        var sites = new[]
+        {
+            new InfluenceSite("A", 0, 0)
+        };
+
+        var allocator = new AnisotropicGridAllocator(
+            influenceScoreModel: new InvalidInfluenceScoreModel());
+
+        Assert.Throws<InvalidOperationException>(() =>
+            allocator.Allocate(
+                sites,
+                xMin: 0,
+                yMin: 0,
+                xMax: 1,
+                yMax: 1,
+                columns: 1,
+                rows: 1));
+    }
+
+    private sealed class FavorSiteBInfluenceScoreModel : IInfluenceScoreModel
+    {
+        public double CalculateScore(
+            InfluenceSite site,
+            double effectiveDistance,
+            double x,
+            double y)
+        {
+            return site.Id == "B"
+                ? effectiveDistance * 0.01
+                : effectiveDistance;
+        }
+    }
+
+    private sealed class InvalidInfluenceScoreModel : IInfluenceScoreModel
+    {
+        public double CalculateScore(
+            InfluenceSite site,
+            double effectiveDistance,
+            double x,
+            double y)
+        {
+            return double.NaN;
+        }
     }
 }
